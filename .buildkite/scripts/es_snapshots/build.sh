@@ -11,15 +11,16 @@ mkdir -p "$destination"
 
 mkdir -p elasticsearch && cd elasticsearch
 
+export ELASTICSEARCH_BRANCH="${ELASTICSEARCH_BRANCH:-$BUILDKITE_BRANCH}"
+
 # TODO use mirror from agent image
 if [[ ! -d .git ]]; then
   git init
   git remote add origin https://github.com/elastic/elasticsearch.git
 fi
-git fetch origin --depth 1 master # TODO
+git fetch origin --depth 1 "$ELASTICSEARCH_BRANCH"
 git reset --hard FETCH_HEAD
 
-export ELASTICSEARCH_BRANCH=master # TODO
 export ELASTICSEARCH_GIT_COMMIT="$(git rev-parse HEAD)"
 export ELASTICSEARCH_GIT_COMMIT_SHORT="$(git rev-parse --short HEAD)"
 
