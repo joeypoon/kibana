@@ -9,6 +9,7 @@ steps:
     agents:
       queue: c2-8
     key: build
+    if: "build.env('KIBANA_BUILD_ID') != null && build.env('KIBANA_BUILD_ID') != ''"
 
   - command: .buildkite/scripts/steps/functional/xpack-cigroup.sh
     label: 'Default CI Group'
