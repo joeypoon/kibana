@@ -7,7 +7,7 @@ steps:
   - command: .buildkite/scripts/steps/build_kibana.sh
     label: Build Kibana Distribution and Plugins
     agents:
-      queue: bootstrap
+      queue: c2-8
     key: build
 
   - command: .buildkite/scripts/steps/functional/xpack-cigroup.sh
