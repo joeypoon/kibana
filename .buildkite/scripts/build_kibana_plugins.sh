@@ -30,6 +30,3 @@ tar -zcf \
   examples/**/target/public \
   x-pack/examples/**/target/public \
   test/**/target/public
-
-ls -alh target
-ls -alh x-pack/plugins/**/target/public
