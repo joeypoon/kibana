@@ -24,10 +24,14 @@ import {
   HOST_METADATA_LIST_ROUTE,
   METADATA_UNITED_INDEX,
   METADATA_UNITED_TRANSFORM,
+  METADATA_TRANSFORMS_STATUS_ROUTE,
+  metadataTransformPrefix,
 } from '../../../plugins/security_solution/common/endpoint/constants';
 import { AGENTS_INDEX } from '../../../plugins/fleet/common';
 import { generateAgentDocs, generateMetadataDocs } from './metadata.fixtures';
 import { indexFleetEndpointPolicy } from '../../../plugins/security_solution/common/endpoint/data_loaders/index_fleet_endpoint_policy';
+import { TransformGetTransformStatsTransformStats } from '@elastic/elasticsearch/lib/api/types';
+import { TRANSFORM_STATES } from '../../../plugins/security_solution/common/constants';
 
 export default function ({ getService }: FtrProviderContext) {
   const supertest = getService('supertest');
@@ -71,7 +75,6 @@ export default function ({ getService }: FtrProviderContext) {
           await deleteAllDocsFromFleetAgents(getService);
           await deleteAllDocsFromMetadataDatastream(getService);
           await deleteAllDocsFromMetadataCurrentIndex(getService);
-          await stopTransform(getService, `${METADATA_UNITED_TRANSFORM}*`);
           await deleteAllDocsFromIndex(getService, METADATA_UNITED_INDEX);
         });
 
@@ -502,6 +505,56 @@ export default function ({ getService }: FtrProviderContext) {
             expect(body.pageSize).to.eql(10);
           });
         });
+      });
+    });
+
+    describe('get metadata transforms', () => {
+      it('correctly returns stopped transform stats', async () => {
+        await stopTransform(getService, `${metadataTransformPrefix}*`);
+        await stopTransform(getService, `${METADATA_UNITED_TRANSFORM}*`);
+
+        const { body } = await supertest
+          .get(METADATA_TRANSFORMS_STATUS_ROUTE)
+          .set('kbn-xsrf', 'xxx')
+          .expect(200);
+
+        expect(body.count).to.eql(2);
+
+        const transforms: TransformGetTransformStatsTransformStats[] = body.transforms.sort(
+          (
+            a: TransformGetTransformStatsTransformStats,
+            b: TransformGetTransformStatsTransformStats
+          ) => a.id > b.id
+        );
+
+        expect(transforms[0].id).to.contain(metadataTransformPrefix);
+        expect(transforms[0].state).to.eql(TRANSFORM_STATES.STOPPED);
+        expect(transforms[1].id).to.contain(METADATA_UNITED_TRANSFORM);
+        expect(transforms[1].state).to.eql(TRANSFORM_STATES.STOPPED);
+
+        await startTransform(getService, metadataTransformPrefix);
+        await startTransform(getService, METADATA_UNITED_TRANSFORM);
+      });
+
+      it('correctly returns started transform stats', async () => {
+        const { body } = await supertest
+          .get(METADATA_TRANSFORMS_STATUS_ROUTE)
+          .set('kbn-xsrf', 'xxx')
+          .expect(200);
+
+        expect(body.count).to.eql(2);
+
+        const transforms: TransformGetTransformStatsTransformStats[] = body.transforms.sort(
+          (
+            a: TransformGetTransformStatsTransformStats,
+            b: TransformGetTransformStatsTransformStats
+          ) => a.id > b.id
+        );
+
+        expect(transforms[0].id).to.contain(metadataTransformPrefix);
+        expect(transforms[0].state).to.eql(TRANSFORM_STATES.STARTED);
+        expect(transforms[1].id).to.contain(METADATA_UNITED_TRANSFORM);
+        expect(transforms[1].state).to.eql(TRANSFORM_STATES.STARTED);
       });
     });
   });
