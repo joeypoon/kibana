@@ -46,8 +46,8 @@ export {
   SETUP_API_ROUTE,
   // Should probably be removed
   SO_SEARCH_LIMIT,
-  // Statuses
-} from './constants';
+} from // Statuses
+'./constants';
 export {
   // Route services
   epmRouteService,
@@ -63,8 +63,8 @@ export {
   decodeCloudId,
 } from './services';
 
-export type { FleetAuthz } from './authz';
-// eslint-disable-next-line @kbn/imports/no_boundary_crossing
+export type { FleetAuthz, FleetPackageAuthz } from './authz';
+
 export { createFleetAuthzMock } from './mocks';
 export type {
   // Request/Response

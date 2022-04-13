@@ -14,6 +14,7 @@ import type {
   SavedObjectsServiceStart,
   HttpServiceSetup,
   Logger,
+  IClusterClient,
 } from '@kbn/core/server';
 
 import type { PluginStart as DataPluginStart } from '@kbn/data-plugin/server';
@@ -61,10 +62,12 @@ class AppContextService {
   private externalCallbacks: ExternalCallbacksStorage = new Map();
   private telemetryEventsSender: TelemetryEventsSender | undefined;
   private savedObjectsTagging: SavedObjectTaggingStart | undefined;
+  private esClusterClient: IClusterClient;
 
   public start(appContext: FleetAppContext) {
     this.data = appContext.data;
     this.esClient = appContext.elasticsearch.client.asInternalUser;
+    this.esClusterClient = appContext.elasticsearch.client;
     this.encryptedSavedObjects = appContext.encryptedSavedObjectsStart?.getClient();
     this.encryptedSavedObjectsSetup = appContext.encryptedSavedObjectsSetup;
     this.securitySetup = appContext.securitySetup;
@@ -167,6 +170,10 @@ class AppContextService {
     }
     // soClient as kibana internal users, be careful on how you use it, security is not enabled
     return this.esClient;
+  }
+
+  public getClusterClient() {
+    return this.esClusterClient;
   }
 
   public getIsProductionMode() {
