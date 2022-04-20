@@ -318,7 +318,8 @@ export const hasRoutePrivileges = async (
     packagePrivileges.push('feature_integrations.read_package_action_result');
   }
 
-  // this is working
+  const spaceResource = 'space:' + spaceId;
+
   const hasPrivilegesResponse: HasPrivilegesResponse = await appContextService
     .getClusterClient()
     .asScoped(req)
@@ -328,22 +329,31 @@ export const hasRoutePrivileges = async (
           // convert fleet authz to es application privileges
           {
             application: 'kibana-.kibana',
-            resources: ['*'],
+            resources: [spaceResource],
             privileges: [
               // "feature_fleetv2.all",
               'feature_fleet.all',
             ],
           },
+        ],
+      },
+    });
+  appContextService.getLogger().warn(JSON.stringify(hasPrivilegesResponse, null, 2));
+
+  // TODO add action
+  const packageResource = 'package:' + packageAuthz?.packageName; //  + ':*',
+
+  const hasPackagePrivilegesResponse: HasPrivilegesResponse = await appContextService
+    .getClusterClient()
+    .asScoped(req)
+    .asCurrentUser.security.hasPrivileges({
+      body: {
+        application: [
           ...(packagePrivileges.length > 0
             ? [
                 {
                   application: 'kibana-.kibana',
-                  // specific actions from packageAuthz?.packageActions
-                  // which privilege indicates "package:endpoint:action:*" ?,
-                  resources: [
-                    'package:' + packageAuthz?.packageName, //  + ':*',
-                    spaceId ? 'space:' + spaceId : 'space:*',
-                  ],
+                  resources: [packageResource, spaceResource],
                   privileges: packagePrivileges,
                 },
               ]
@@ -351,26 +361,9 @@ export const hasRoutePrivileges = async (
         ],
       },
     });
-  appContextService.getLogger().warn(JSON.stringify(hasPrivilegesResponse, null, 2));
+  appContextService.getLogger().warn(JSON.stringify(hasPackagePrivilegesResponse, null, 2));
 
-  // checks if user has at least one of legacy or new privileges
-
-  const hasLegacyPrivilege = Object.values(
-    hasPrivilegesResponse.application['kibana-.kibana']['*']
-  ).every((val) => val === true);
-
-  // space:* works automatically if queried for space:teamA
-  const hasNewPrivilege = Object.keys(hasPrivilegesResponse.application['kibana-.kibana'])
-    .filter((res) => res !== '*')
-    .every((res) =>
-      Object.values(hasPrivilegesResponse.application['kibana-.kibana'][res]).every(
-        (val) => val === true
-      )
-    );
-
-  // console.log(hasLegacyPrivilege);
-  // console.log(hasNewPrivilege);
-  return hasLegacyPrivilege || hasNewPrivilege;
+  return hasPrivilegesResponse.has_all_requested || hasPackagePrivilegesResponse.has_all_requested;
 };
 
 async function authHandler(
