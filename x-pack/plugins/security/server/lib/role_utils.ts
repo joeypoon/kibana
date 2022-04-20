@@ -16,28 +16,7 @@ export const transformPrivilegesToElasticsearchPrivileges = (
   application: string,
   kibanaPrivileges: KibanaPrivilegesType = []
 ) => {
-  return kibanaPrivileges.map(({ base, feature, spaces }) => {
-    if (spaces.length === 1 && spaces[0] === GLOBAL_RESOURCE) {
-      return {
-        privileges: [
-          ...(base
-            ? base.map((privilege) => PrivilegeSerializer.serializeGlobalBasePrivilege(privilege))
-            : []),
-          ...(feature
-            ? Object.entries(feature)
-                .map(([featureName, featurePrivileges]) =>
-                  featurePrivileges.map((privilege) =>
-                    PrivilegeSerializer.serializeFeaturePrivilege(featureName, privilege)
-                  )
-                )
-                .flat()
-            : []),
-        ],
-        application,
-        resources: [GLOBAL_RESOURCE],
-      };
-    }
-
+  return kibanaPrivileges.map(({ base, feature, spaces, packages }) => {
     return {
       privileges: [
         ...(base
@@ -54,9 +33,14 @@ export const transformPrivilegesToElasticsearchPrivileges = (
           : []),
       ],
       application,
-      resources: (spaces as string[]).map((resource) =>
-        ResourceSerializer.serializeSpaceResource(resource)
-      ),
+      resources: [
+        ...(spaces as string[]).map((resource) =>
+          ResourceSerializer.serializeSpaceResource(resource)
+        ),
+        ...(packages as string[]).map((resource) =>
+          ResourceSerializer.serializePackageResource(resource)
+        ),
+      ],
     };
   });
 };

@@ -114,6 +114,8 @@ export const getKibanaRoleSchema = (
          */
         spaces: spacesSchema,
 
+        packages: schema.maybe(schema.arrayOf(schema.string())),
+
         /**
          * An optional list of Kibana base privileges. If this entry applies to special "global"
          * space (all spaces) then specified base privileges should be within known base "global"
