@@ -206,6 +206,7 @@ class PackagePolicyService implements PackagePolicyServiceInterface {
         user: options?.user,
         bumpRevision: options?.bumpRevision ?? true,
         force: options?.force,
+        references: [{ name: 'package_policy:' + newSo.id, type: newSo.type, id: newSo.id }],
       }
     );
 
@@ -262,6 +263,11 @@ class PackagePolicyService implements PackagePolicyServiceInterface {
       {
         user: options?.user,
         bumpRevision: options?.bumpRevision ?? true,
+        references: newSos.map((newSo) => ({
+          name: 'package_policy:' + newSo.id,
+          type: newSo.type,
+          id: newSo.id,
+        })),
       }
     );
 

@@ -14,6 +14,8 @@ import type {
   ElasticsearchClient,
   SavedObjectsClientContract,
   SavedObjectsBulkUpdateResponse,
+  SavedObjectReference,
+  SavedObject,
 } from '@kbn/core/server';
 
 import type { AuthenticatedUser } from '@kbn/security-plugin/server';
@@ -99,7 +101,10 @@ class AgentPolicyService {
     id: string,
     agentPolicy: Partial<AgentPolicySOAttributes>,
     user?: AuthenticatedUser,
-    options: { bumpRevision: boolean } = { bumpRevision: true }
+    options: { bumpRevision: boolean; references: SavedObjectReference[] } = {
+      bumpRevision: true,
+      references: [],
+    }
   ): Promise<AgentPolicy> {
     const existingAgentPolicy = await this.get(soClient, id, true);
 
@@ -123,12 +128,21 @@ class AgentPolicyService {
       this.hasAPMIntegration(existingAgentPolicy)
     );
 
-    await soClient.update<AgentPolicySOAttributes>(SAVED_OBJECT_TYPE, id, {
-      ...agentPolicy,
-      ...(options.bumpRevision ? { revision: existingAgentPolicy.revision + 1 } : {}),
-      updated_at: new Date().toISOString(),
-      updated_by: user ? user.username : 'system',
-    });
+    const existingAgentPolicySO = await this.getSO(soClient, id);
+
+    await soClient.update<AgentPolicySOAttributes>(
+      SAVED_OBJECT_TYPE,
+      id,
+      {
+        ...agentPolicy,
+        ...(options.bumpRevision ? { revision: existingAgentPolicy.revision + 1 } : {}),
+        updated_at: new Date().toISOString(),
+        updated_by: user ? user.username : 'system',
+      },
+      {
+        references: [...(existingAgentPolicySO?.references ?? []), ...options.references],
+      }
+    );
 
     if (options.bumpRevision) {
       await this.triggerAgentPolicyUpdatedEvent(soClient, esClient, 'updated', id);
@@ -271,6 +285,23 @@ class AgentPolicyService {
     }
 
     return agentPolicy;
+  }
+
+  // TODO refactor get to return saved object as well for references
+  public async getSO(
+    soClient: SavedObjectsClientContract,
+    id: string
+  ): Promise<SavedObject<AgentPolicySOAttributes> | null> {
+    const agentPolicySO = await soClient.get<AgentPolicySOAttributes>(SAVED_OBJECT_TYPE, id);
+    if (!agentPolicySO) {
+      return null;
+    }
+
+    if (agentPolicySO.error) {
+      throw new Error(agentPolicySO.error.message);
+    }
+
+    return agentPolicySO;
   }
 
   public async getByIDs(
@@ -615,8 +646,14 @@ class AgentPolicyService {
     esClient: ElasticsearchClient,
     id: string,
     packagePolicyIds: string[],
-    options: { user?: AuthenticatedUser; bumpRevision: boolean; force?: boolean } = {
+    options: {
+      user?: AuthenticatedUser;
+      bumpRevision: boolean;
+      force?: boolean;
+      references: SavedObjectReference[];
+    } = {
       bumpRevision: true,
+      references: [],
     }
   ): Promise<AgentPolicy> {
     const oldAgentPolicy = await this.get(soClient, id, false);
@@ -641,10 +678,11 @@ class AgentPolicyService {
         ),
       },
       options?.user,
-      { bumpRevision: options.bumpRevision }
+      options
     );
   }
 
+  // TODO references
   public async unassignPackagePolicies(
     soClient: SavedObjectsClientContract,
     esClient: ElasticsearchClient,
