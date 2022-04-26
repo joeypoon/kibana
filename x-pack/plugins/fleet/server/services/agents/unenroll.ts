@@ -75,10 +75,11 @@ export async function unenrollAgents(
   }
 ): Promise<{ items: BulkActionResult[] }> {
   if ('agentIds' in options) {
-    const givenAgents = await getAgents(esClient, options);
+    const givenAgents = await getAgents(soClient, esClient, options);
     return await unenrollBatch(soClient, esClient, givenAgents, options);
   }
   return await processAgentsInBatches(
+    soClient,
     esClient,
     {
       kuery: options.kuery,

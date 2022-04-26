@@ -109,6 +109,7 @@ export async function reassignAgents(
     }
   } else if ('kuery' in options) {
     return await processAgentsInBatches(
+      soClient,
       esClient,
       {
         kuery: options.kuery,

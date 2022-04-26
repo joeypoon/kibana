@@ -28,6 +28,7 @@ import type { SecurityPluginStart, SecurityPluginSetup } from '@kbn/security-plu
 import type { CloudSetup } from '@kbn/cloud-plugin/server';
 
 import type { SavedObjectTaggingStart } from '@kbn/saved-objects-tagging-plugin/server';
+import type { SpacesServiceStart } from '@kbn/spaces-plugin/server';
 
 import type { FleetConfigType } from '../../common/types';
 import type { ExperimentalFeatures } from '../../common/experimental_features';
@@ -63,6 +64,7 @@ class AppContextService {
   private telemetryEventsSender: TelemetryEventsSender | undefined;
   private savedObjectsTagging: SavedObjectTaggingStart | undefined;
   private esClusterClient: IClusterClient;
+  private spacesService: SpacesServiceStart;
 
   public start(appContext: FleetAppContext) {
     this.data = appContext.data;
@@ -82,6 +84,7 @@ class AppContextService {
     this.httpSetup = appContext.httpSetup;
     this.telemetryEventsSender = appContext.telemetryEventsSender;
     this.savedObjectsTagging = appContext.savedObjectsTagging;
+    this.spacesService = appContext.spacesService;
 
     if (appContext.config$) {
       this.config$ = appContext.config$;
@@ -234,6 +237,10 @@ class AppContextService {
 
   public getTelemetryEventsSender() {
     return this.telemetryEventsSender;
+  }
+
+  public getSpacesService() {
+    return this.spacesService;
   }
 }
 

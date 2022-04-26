@@ -22,6 +22,7 @@ import type { AuthenticatedUser } from '@kbn/security-plugin/server';
 import type { BulkResponseItem } from '@elastic/elasticsearch/lib/api/typesWithBodyKey';
 
 import { DEFAULT_SPACE_ID } from '@kbn/spaces-plugin/common/constants';
+import type { ISpacesClient } from '@kbn/spaces-plugin/server';
 
 import {
   AGENT_POLICY_SAVED_OBJECT_TYPE,
@@ -351,7 +352,9 @@ class AgentPolicyService {
     soClient: SavedObjectsClientContract,
     options: ListWithKuery & {
       withPackagePolicies?: boolean;
-    }
+      showAllSpaces?: boolean;
+    },
+    spacesClient?: ISpacesClient
   ): Promise<{ items: AgentPolicy[]; total: number; page: number; perPage: number }> {
     const {
       page = 1,
@@ -387,6 +390,20 @@ class AgentPolicyService {
       }
     }
 
+    // querying all spaces and agent policies for all spaces
+    if (options.showAllSpaces && spacesClient) {
+      const spaces = (await spacesClient.getAll()).map((space) => space.id);
+      const rawSoClient = appContextService.getSavedObjects().createInternalRepository();
+      agentPoliciesSO = await rawSoClient.find<AgentPolicySOAttributes>({
+        namespaces: spaces,
+        type: AGENT_POLICY_SAVED_OBJECT_TYPE,
+        page: 1,
+        perPage: SO_SEARCH_LIMIT,
+      });
+      // console.log(spaces);
+      // console.log(JSON.stringify(agentPoliciesSO, null, 2));
+    }
+
     const agentPolicies = await pMap(
       agentPoliciesSO.saved_objects,
       async (agentPolicySO) => {
@@ -394,7 +411,8 @@ class AgentPolicyService {
           id: agentPolicySO.id,
           ...agentPolicySO.attributes,
         };
-        if (withPackagePolicies) {
+        if (withPackagePolicies && !options.showAllSpaces) {
+          // TODO showAllSpaces take package policies from references
           const agentPolicyWithPackagePolicies = await this.get(
             soClient,
             agentPolicySO.id,
@@ -732,7 +750,7 @@ class AgentPolicyService {
       throw new HostedAgentPolicyRestrictionRelatedError(`Cannot delete hosted agent policy ${id}`);
     }
 
-    const { total } = await getAgentsByKuery(esClient, {
+    const { total } = await getAgentsByKuery(soClient, esClient, {
       showInactive: false,
       perPage: 0,
       page: 1,

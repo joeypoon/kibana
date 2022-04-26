@@ -20,6 +20,7 @@ export const GetAgentsRequestSchema = {
     showUpgradeable: schema.boolean({ defaultValue: false }),
     sortField: schema.maybe(schema.string()),
     sortOrder: schema.maybe(schema.oneOf([schema.literal('asc'), schema.literal('desc')])),
+    showAllSpaces: schema.boolean({ defaultValue: false }),
   }),
 };
 

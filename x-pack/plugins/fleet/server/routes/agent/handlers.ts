@@ -43,6 +43,10 @@ import type {
   PostBulkUpdateAgentTagsRequestSchema,
 } from '../../types';
 import { defaultIngestErrorHandler } from '../../errors';
+<<<<<<< HEAD
+=======
+import { appContextService, licenseService } from '../../services';
+>>>>>>> aa32ad79cd2 (added showAllSpaces param to agents and agent_policies api)
 import * as AgentService from '../../services/agents';
 
 export const getAgentHandler: RequestHandler<
@@ -169,9 +173,10 @@ export const getAgentsHandler: RequestHandler<
 > = async (context, request, response) => {
   const coreContext = await context.core;
   const esClient = coreContext.elasticsearch.client.asInternalUser;
+  const soClient = coreContext.savedObjects.client;
 
   try {
-    const { agents, total, page, perPage } = await AgentService.getAgentsByKuery(esClient, {
+    const { agents, total, page, perPage } = await AgentService.getAgentsByKuery(soClient, esClient, {
       page: request.query.page,
       perPage: request.query.perPage,
       showInactive: request.query.showInactive,
@@ -179,7 +184,10 @@ export const getAgentsHandler: RequestHandler<
       kuery: request.query.kuery,
       sortField: request.query.sortField,
       sortOrder: request.query.sortOrder,
-    });
+      showAllSpaces: request.query.showAllSpaces,
+    },
+    appContextService.getSpacesService().createSpacesClient(request)
+    );
     const totalInactive = request.query.showInactive
       ? await AgentService.countInactiveAgents(esClient, {
           kuery: request.query.kuery,
@@ -285,8 +293,10 @@ export const getAgentStatusForAgentPolicyHandler: RequestHandler<
 > = async (context, request, response) => {
   const coreContext = await context.core;
   const esClient = coreContext.elasticsearch.client.asInternalUser;
+  const soClient = coreContext.savedObjects.client;
   try {
     const results = await AgentService.getAgentStatusForAgentPolicy(
+      soClient,
       esClient,
       request.query.policyId,
       request.query.kuery

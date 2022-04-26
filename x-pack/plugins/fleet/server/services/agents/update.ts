@@ -20,7 +20,7 @@ export async function unenrollForAgentPolicyId(
   let hasMore = true;
   let page = 1;
   while (hasMore) {
-    const { agents } = await getAgentsByKuery(esClient, {
+    const { agents } = await getAgentsByKuery(soClient, esClient, {
       kuery: `${AGENTS_PREFIX}.policy_id:"${policyId}"`,
       page: page++,
       perPage: 1000,

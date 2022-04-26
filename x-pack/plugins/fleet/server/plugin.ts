@@ -40,7 +40,11 @@ import type { PluginSetupContract as FeaturesPluginSetup } from '@kbn/features-p
 
 import type { CloudSetup } from '@kbn/cloud-plugin/server';
 
-import type { SpacesPluginStart } from '@kbn/spaces-plugin/server';
+import type {
+  SpacesPluginStart,
+  SpacesPluginSetup,
+  SpacesServiceStart,
+} from '@kbn/spaces-plugin/server';
 
 import type { SavedObjectTaggingStart } from '@kbn/saved-objects-tagging-plugin/server';
 
@@ -107,7 +111,7 @@ export interface FleetSetupDeps {
   encryptedSavedObjects: EncryptedSavedObjectsPluginSetup;
   cloud?: CloudSetup;
   usageCollection?: UsageCollectionSetup;
-  spaces: SpacesPluginStart;
+  spaces: SpacesPluginSetup;
   telemetry?: TelemetryPluginSetup;
 }
 
@@ -118,6 +122,7 @@ export interface FleetStartDeps {
   security: SecurityPluginStart;
   telemetry?: TelemetryPluginStart;
   savedObjectsTagging: SavedObjectTaggingStart;
+  spaces: SpacesPluginStart;
 }
 
 export interface FleetAppContext {
@@ -139,6 +144,7 @@ export interface FleetAppContext {
   logger?: Logger;
   httpSetup?: HttpServiceSetup;
   telemetryEventsSender: TelemetryEventsSender;
+  spacesService: SpacesServiceStart;
 }
 
 export type FleetSetupContract = void;
@@ -202,6 +208,7 @@ export class FleetPlugin
   private securitySetup!: SecurityPluginSetup;
   private encryptedSavedObjectsSetup?: EncryptedSavedObjectsPluginSetup;
   private readonly telemetryEventsSender: TelemetryEventsSender;
+  private spacesService: SpacesServiceStart;
   private readonly fleetStatus$: BehaviorSubject<ServiceStatus>;
 
   private agentService?: AgentService;
@@ -399,10 +406,11 @@ export class FleetPlugin
       async (context, request) => {
         const plugin = this;
         const esClient = (await context.core).elasticsearch.client;
+        const soClient = (await context.core).savedObjects.client;
 
         return {
           get agentClient() {
-            const agentService = plugin.setupAgentService(esClient.asInternalUser);
+            const agentService = plugin.setupAgentService(soClient, esClient.asInternalUser);
 
             return {
               asCurrentUser: agentService.asScoped(request),
@@ -464,6 +472,8 @@ export class FleetPlugin
   }
 
   public start(core: CoreStart, plugins: FleetStartDeps): FleetStartContract {
+    this.spacesService = plugins.spaces.spacesService;
+
     appContextService.start({
       elasticsearch: core.elasticsearch,
       data: plugins.data,
@@ -485,6 +495,7 @@ export class FleetPlugin
       cloud: this.cloud,
       logger: this.logger,
       telemetryEventsSender: this.telemetryEventsSender,
+      spacesService: this.spacesService,
     });
     licenseService.start(plugins.licensing.license$);
 
@@ -539,17 +550,15 @@ export class FleetPlugin
       }
     })();
 
+    const soClient = new SavedObjectsClient(core.savedObjects.createInternalRepository());
     return {
       authz: {
         fromRequest: getAuthzFromRequest,
       },
       fleetSetupCompleted: () => fleetSetupPromise,
       esIndexPatternService: new ESIndexPatternSavedObjectService(),
-      packageService: this.setupPackageService(
-        core.elasticsearch.client.asInternalUser,
-        new SavedObjectsClient(core.savedObjects.createInternalRepository())
-      ),
-      agentService: this.setupAgentService(core.elasticsearch.client.asInternalUser),
+      packageService: this.setupPackageService(core.elasticsearch.client.asInternalUser, soClient),
+      agentService: this.setupAgentService(soClient, core.elasticsearch.client.asInternalUser),
       agentPolicyService: {
         get: agentPolicyService.get,
         list: agentPolicyService.list,
@@ -573,12 +582,15 @@ export class FleetPlugin
     this.fleetStatus$.complete();
   }
 
-  private setupAgentService(internalEsClient: ElasticsearchClient): AgentService {
+  private setupAgentService(
+    soClient: SavedObjectsClientContract,
+    internalEsClient: ElasticsearchClient
+  ): AgentService {
     if (this.agentService) {
       return this.agentService;
     }
 
-    this.agentService = new AgentServiceImpl(internalEsClient);
+    this.agentService = new AgentServiceImpl(soClient, internalEsClient);
     return this.agentService;
   }
 

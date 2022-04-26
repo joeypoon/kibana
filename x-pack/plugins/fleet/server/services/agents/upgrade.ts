@@ -103,6 +103,7 @@ export async function sendUpgradeAgentsActions(
   } else if ('kuery' in options) {
     const actionId = uuid();
     return await processAgentsInBatches(
+      soClient,
       esClient,
       {
         kuery: options.kuery,
