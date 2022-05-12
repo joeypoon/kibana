@@ -106,6 +106,7 @@ import { TelemetryEventsSender } from './telemetry/sender';
 import { setupFleet } from './services/setup';
 import type { PackagePolicyService } from './services/package_policy_service';
 import { PackagePolicyServiceImpl } from './services/package_policy';
+import { capabilitiesProvider, capabilitiesSwitcher } from './services/capabilities_provider';
 
 export interface FleetSetupDeps {
   security: SecurityPluginSetup;
@@ -240,6 +241,10 @@ export class FleetPlugin
     const config = this.configInitialValue;
 
     core.status.set(this.fleetStatus$.asObservable());
+
+    core.capabilities.registerProvider(capabilitiesProvider);
+
+    core.capabilities.registerSwitcher(capabilitiesSwitcher);
 
     registerSavedObjects(core.savedObjects, deps.encryptedSavedObjects);
     registerEncryptedSavedObjects(deps.encryptedSavedObjects);
