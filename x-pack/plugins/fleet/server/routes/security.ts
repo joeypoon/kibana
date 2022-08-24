@@ -63,6 +63,7 @@ function getAuthorizationFromPrivileges(
 // req has no body at this point, only at handler
 export async function getAuthzFromRequest(req: KibanaRequest): Promise<FleetAuthz> {
   const security = appContextService.getSecurity();
+  const capabilities = await appContextService.getCapabilities()?.resolveCapabilities(req);
 
   if (security.authz.mode.useRbacForRequest(req)) {
     const checkPrivileges = security.authz.checkPrivilegesDynamicallyWithRequest(req);
@@ -74,7 +75,6 @@ export async function getAuthzFromRequest(req: KibanaRequest): Promise<FleetAuth
         security.authz.actions.api.get('fleet-setup'),
       ],
     });
-    // console.log(JSON.stringify(privileges, null, 2));
     const fleetAllAuth = getAuthorizationFromPrivileges(privileges.kibana, `${PLUGIN_ID}-all`);
     const intAllAuth = getAuthorizationFromPrivileges(
       privileges.kibana,
@@ -86,18 +86,24 @@ export async function getAuthzFromRequest(req: KibanaRequest): Promise<FleetAuth
     );
     const fleetSetupAuth = getAuthorizationFromPrivileges(privileges.kibana, 'fleet-setup');
 
-    return calculateAuthz({
-      fleet: { all: fleetAllAuth, setup: fleetSetupAuth },
-      integrations: { all: intAllAuth, read: intReadAuth },
-      isSuperuser: checkSuperuser(req),
-    });
+    return {
+      ...calculateAuthz({
+        fleet: { all: fleetAllAuth, setup: fleetSetupAuth },
+        integrations: { all: intAllAuth, read: intReadAuth },
+        isSuperuser: checkSuperuser(req),
+      }),
+      packagePrivileges: capabilities?.packages || ({} as any),
+    };
   }
 
-  return calculateAuthz({
-    fleet: { all: false, setup: false },
-    integrations: { all: false, read: false },
-    isSuperuser: false,
-  });
+  return {
+    ...calculateAuthz({
+      fleet: { all: false, setup: false },
+      integrations: { all: false, read: false },
+      isSuperuser: false,
+    }),
+    packagePrivileges: {},
+  };
 }
 
 interface Authz {

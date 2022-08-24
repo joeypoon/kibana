@@ -49,17 +49,38 @@ export class RolesAPIClient {
       if (kibanaPrivilege.base.length > 0) {
         kibanaPrivilege.feature = {};
       }
-      // TODO remove, for testing - packages will come from roles UI
-      if (kibanaPrivilege.feature!.integrations)
-        kibanaPrivilege.packages = [
-          'endpoint:*',
-          'endpoint:action:*',
-          'endpoint:action:isolate_host',
-        ];
-      // 'endpoint:action:isolate_host'];
-      else kibanaPrivilege.packages = [];
 
-      // console.log(JSON.stringify(kibanaPrivilege, null, 2));
+      // TODO remove, for testing - packages will come from roles UI
+      const endpointFeatures = kibanaPrivilege.feature?.siem;
+      const packages: string[] = [];
+
+      if (endpointFeatures) {
+        if (endpointFeatures.includes('endpoint_management_all')) {
+          packages.push('endpoint:action:endpoint_management_write');
+        } else if (endpointFeatures.includes('endpoint_management_read')) {
+          packages.push('endpoint:action:endpoint_management_read');
+        }
+
+        if (endpointFeatures.includes('response_actions_management_all')) {
+          packages.push('endpoint:action:response_actions_management_write');
+        } else if (endpointFeatures.includes('response_actions_management_read')) {
+          packages.push('endpoint:action:response_actions_management_read');
+        }
+
+        if (endpointFeatures.includes('host_isolation_all')) {
+          packages.push('endpoint:action:isolate_hosts');
+        }
+
+        if (endpointFeatures.includes('process_operations_all')) {
+          packages.push('endpoint:action:process_operations');
+        }
+
+        if (endpointFeatures.includes('file_operations_all')) {
+          packages.push('endpoint:action:file_operations');
+        }
+      }
+
+      kibanaPrivilege.packages = packages;
     });
 
     // @ts-expect-error

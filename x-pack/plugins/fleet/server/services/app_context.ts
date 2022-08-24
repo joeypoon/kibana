@@ -8,7 +8,7 @@
 import type { Observable } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { kibanaPackageJson } from '@kbn/utils';
-import type { KibanaRequest } from '@kbn/core/server';
+import type { CapabilitiesStart, KibanaRequest } from '@kbn/core/server';
 import type {
   ElasticsearchClient,
   SavedObjectsServiceStart,
@@ -65,6 +65,7 @@ class AppContextService {
   private savedObjectsTagging: SavedObjectTaggingStart | undefined;
   private esClusterClient: IClusterClient;
   private spacesService: SpacesServiceStart;
+  private capabilities: CapabilitiesStart | undefined;
 
   public start(appContext: FleetAppContext) {
     this.data = appContext.data;
@@ -85,6 +86,7 @@ class AppContextService {
     this.telemetryEventsSender = appContext.telemetryEventsSender;
     this.savedObjectsTagging = appContext.savedObjectsTagging;
     this.spacesService = appContext.spacesService;
+    this.capabilities = appContext.capabilities;
 
     if (appContext.config$) {
       this.config$ = appContext.config$;
@@ -241,6 +243,10 @@ class AppContextService {
 
   public getSpacesService() {
     return this.spacesService;
+  }
+
+  public getCapabilities() {
+    return this.capabilities;
   }
 }
 

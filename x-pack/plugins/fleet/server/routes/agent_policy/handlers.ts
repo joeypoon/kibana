@@ -6,7 +6,12 @@
  */
 
 import type { TypeOf } from '@kbn/config-schema';
-import type { RequestHandler, ResponseHeaders, ElasticsearchClient } from '@kbn/core/server';
+import type {
+  RequestHandler,
+  ResponseHeaders,
+  ElasticsearchClient,
+  SavedObjectsClientContract,
+} from '@kbn/core/server';
 import pMap from 'p-map';
 import { safeDump } from 'js-yaml';
 
@@ -45,13 +50,14 @@ import { defaultIngestErrorHandler, AgentPolicyNotFoundError } from '../../error
 import { createAgentPolicyWithPackages } from '../../services/agent_policy_create';
 
 async function populateAssignedAgentsCount(
+  soClient: SavedObjectsClientContract,
   esClient: ElasticsearchClient,
   agentPolicies: AgentPolicy[]
 ) {
   await pMap(
     agentPolicies,
     (agentPolicy: GetAgentPoliciesResponseItem) =>
-      getAgentsByKuery(esClient, {
+      getAgentsByKuery(soClient, esClient, {
         showInactive: false,
         perPage: 0,
         page: 1,
@@ -86,7 +92,7 @@ export const getAgentPoliciesHandler: FleetRequestHandler<
       perPage,
     };
 
-    await populateAssignedAgentsCount(esClient, items);
+    await populateAssignedAgentsCount(soClient, esClient, items);
 
     return response.ok({ body });
   } catch (error) {
@@ -113,7 +119,7 @@ export const bulkGetAgentPoliciesHandler: FleetRequestHandler<
       items,
     };
 
-    await populateAssignedAgentsCount(esClient, items);
+    await populateAssignedAgentsCount(soClient, esClient, items);
 
     return response.ok({ body });
   } catch (error) {

@@ -45,7 +45,25 @@ export const capabilitiesProvider: CapabilitiesProvider = () => {
           all: {
             executePackageAction: false,
           },
+          endpoint_management_write: {
+            executePackageAction: false,
+          },
+          endpoint_management_read: {
+            executePackageAction: false,
+          },
+          response_actions_management_write: {
+            executePackageAction: false,
+          },
+          response_actions_management_read: {
+            executePackageAction: false,
+          },
           isolate_hosts: {
+            executePackageAction: false,
+          },
+          process_operations: {
+            executePackageAction: false,
+          },
+          file_operations: {
             executePackageAction: false,
           },
         },

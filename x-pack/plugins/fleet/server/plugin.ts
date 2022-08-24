@@ -23,6 +23,7 @@ import type {
   ServiceStatus,
   ElasticsearchClient,
   SavedObjectsClientContract,
+  CapabilitiesStart,
 } from '@kbn/core/server';
 import type { UsageCollectionSetup } from '@kbn/usage-collection-plugin/server';
 
@@ -148,6 +149,7 @@ export interface FleetAppContext {
   httpSetup?: HttpServiceSetup;
   telemetryEventsSender: TelemetryEventsSender;
   spacesService: SpacesServiceStart;
+  capabilities: CapabilitiesStart;
 }
 
 export type FleetSetupContract = void;
@@ -512,6 +514,7 @@ export class FleetPlugin
       logger: this.logger,
       telemetryEventsSender: this.telemetryEventsSender,
       spacesService: this.spacesService,
+      capabilities: core.capabilities,
     });
     licenseService.start(plugins.licensing.license$);
 

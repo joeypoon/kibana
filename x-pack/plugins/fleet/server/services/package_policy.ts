@@ -1065,7 +1065,6 @@ class PackagePolicyClientWithAuthz extends PackagePolicyClientImpl {
           return (req as CreatePackagePolicyRequest).body.package?.name;
         },
         executePackageAction: true,
-        packageActions: ['isolate_host'],
       },
     });
 

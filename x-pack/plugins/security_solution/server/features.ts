@@ -112,7 +112,148 @@ export const getKibanaPrivilegesFeaturePrivileges = (ruleTypes: string[]): Kiban
     insightsAndAlerting: ['triggersActions'],
   },
   alerting: ruleTypes,
-  subFeatures: [],
+  subFeatures: [
+    {
+      name: i18n.translate('xpack.securitySolution.featureRegistry.endpointManagement', {
+        defaultMessage: 'Endpoint Management',
+      }),
+      privilegeGroups: [
+        {
+          groupType: 'mutually_exclusive',
+          privileges: [
+            {
+              api: [`${APP_ID}-writeEndpointManagement`, `${APP_ID}-readEndpointManagement`],
+              id: 'endpoint_management_all',
+              includeIn: 'all',
+              name: 'All',
+              savedObject: {
+                all: [],
+                read: [],
+              },
+              ui: ['writeEndpointManagement', 'readEndpointManagement'],
+            },
+            {
+              api: [`${APP_ID}-readEndpointManagement`],
+              id: 'endpoint_management_read',
+              includeIn: 'read',
+              name: 'Read',
+              savedObject: {
+                all: [],
+                read: [],
+              },
+              ui: ['readEndpointManagement'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: i18n.translate('xpack.securitySolution.featureRegistry.responseActionsManagement', {
+        defaultMessage: 'Response Actions Management',
+      }),
+      privilegeGroups: [
+        {
+          groupType: 'mutually_exclusive',
+          privileges: [
+            {
+              api: [
+                `${APP_ID}-writeResponseActionsManagement`,
+                `${APP_ID}-readResponseActionsManagement`,
+              ],
+              id: 'response_actions_management_all',
+              includeIn: 'all',
+              name: 'All',
+              savedObject: {
+                all: [],
+                read: [],
+              },
+              ui: ['writeResponseActionsManagement', 'readResponseActionsManagement'],
+            },
+            {
+              api: [`${APP_ID}-readResponseActionsManagement`],
+              id: 'response_actions_management_read',
+              includeIn: 'read',
+              name: 'Read',
+              savedObject: {
+                all: [],
+                read: [],
+              },
+              ui: ['readResponseActionsManagement'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: i18n.translate('xpack.securitySolution.featureRegistry.hostIsolation', {
+        defaultMessage: 'Host Isolation',
+      }),
+      privilegeGroups: [
+        {
+          groupType: 'mutually_exclusive',
+          privileges: [
+            {
+              api: [`${APP_ID}-writehostIsolation`],
+              id: 'host_isolation_all',
+              includeIn: 'all',
+              name: 'All',
+              savedObject: {
+                all: [],
+                read: [],
+              },
+              ui: ['writehostIsolation'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: i18n.translate('xpack.securitySolution.featureRegistry.processOperations', {
+        defaultMessage: 'Process Operations',
+      }),
+      privilegeGroups: [
+        {
+          groupType: 'mutually_exclusive',
+          privileges: [
+            {
+              api: [`${APP_ID}-writeProcessOperations`],
+              id: 'process_operations_all',
+              includeIn: 'all',
+              name: 'All',
+              savedObject: {
+                all: [],
+                read: [],
+              },
+              ui: ['writeProcessOperations'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: i18n.translate('xpack.securitySolution.featureRegistry.fileOperations', {
+        defaultMessage: 'File Operations',
+      }),
+      privilegeGroups: [
+        {
+          groupType: 'mutually_exclusive',
+          privileges: [
+            {
+              api: [`${APP_ID}-writeFileOperations`],
+              id: 'file_operations_all',
+              includeIn: 'all',
+              name: 'All',
+              savedObject: {
+                all: [],
+                read: [],
+              },
+              ui: ['writeFileOperations'],
+            },
+          ],
+        },
+      ],
+    },
+  ],
   privileges: {
     all: {
       app: [APP_ID, CLOUD_POSTURE_APP_ID, 'kibana'],
