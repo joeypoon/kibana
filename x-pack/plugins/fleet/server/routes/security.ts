@@ -13,7 +13,6 @@ import type {
   RequestHandler,
   RequestHandlerContext,
   OnPostAuthHandler,
-  KibanaResponseFactory,
 } from '@kbn/core/server';
 
 import type { HasPrivilegesResponse } from '@kbn/security-plugin/server';
@@ -23,7 +22,7 @@ import { INTEGRATIONS_PLUGIN_ID } from '../../common';
 import { calculateAuthz } from '../../common/authz';
 
 import { appContextService } from '../services';
-import type { FleetRequestHandler, FleetRequestHandlerContext } from '../types';
+import type { FleetRequestHandlerContext } from '../types';
 import { PLUGIN_ID } from '../constants';
 
 function checkSecurityEnabled() {
@@ -60,9 +59,10 @@ function getAuthorizationFromPrivileges(
   const privilege = kibanaPrivileges.find((p) => p.privilege.includes(searchPrivilege));
   return privilege ? privilege.authorized : false;
 }
-// req has no body at this point, only at handler
+
 export async function getAuthzFromRequest(req: KibanaRequest): Promise<FleetAuthz> {
   const security = appContextService.getSecurity();
+  const capabilities = await appContextService.getCapabilities()?.resolveCapabilities(req);
 
   if (security.authz.mode.useRbacForRequest(req)) {
     const checkPrivileges = security.authz.checkPrivilegesDynamicallyWithRequest(req);
@@ -74,7 +74,6 @@ export async function getAuthzFromRequest(req: KibanaRequest): Promise<FleetAuth
         security.authz.actions.api.get('fleet-setup'),
       ],
     });
-    // console.log(JSON.stringify(privileges, null, 2));
     const fleetAllAuth = getAuthorizationFromPrivileges(privileges.kibana, `${PLUGIN_ID}-all`);
     const intAllAuth = getAuthorizationFromPrivileges(
       privileges.kibana,
@@ -86,18 +85,24 @@ export async function getAuthzFromRequest(req: KibanaRequest): Promise<FleetAuth
     );
     const fleetSetupAuth = getAuthorizationFromPrivileges(privileges.kibana, 'fleet-setup');
 
-    return calculateAuthz({
-      fleet: { all: fleetAllAuth, setup: fleetSetupAuth },
-      integrations: { all: intAllAuth, read: intReadAuth },
-      isSuperuser: checkSuperuser(req),
-    });
+    return {
+      ...calculateAuthz({
+        fleet: { all: fleetAllAuth, setup: fleetSetupAuth },
+        integrations: { all: intAllAuth, read: intReadAuth },
+        isSuperuser: checkSuperuser(req),
+      }),
+      packagePrivileges: capabilities?.packages || ({} as any),
+    };
   }
 
-  return calculateAuthz({
-    fleet: { all: false, setup: false },
-    integrations: { all: false, read: false },
-    isSuperuser: false,
-  });
+  return {
+    ...calculateAuthz({
+      fleet: { all: false, setup: false },
+      integrations: { all: false, read: false },
+      isSuperuser: false,
+    }),
+    packagePrivileges: {},
+  };
 }
 
 interface Authz {
@@ -252,9 +257,6 @@ export function makeRouterWithFleetAuthz<TContext extends FleetRequestHandlerCon
   }
 
   const fleetAuthzOnPostAuthHandler: OnPostAuthHandler = async (req, res, toolkit) => {
-    // instead of doing authz check here, using hasRoutePrivileges in a route handler wrapper to get hold of req params
-    return toolkit.next();
-
     if (!shouldHandlePostAuthRequest(req)) {
       return toolkit.next();
     }
@@ -316,9 +318,6 @@ export const hasRoutePrivileges = async (
   if (packageAuthz?.executePackageAction) {
     actionPrivileges.push('feature_integrations.execute_package_action');
   }
-  // if (packageAuthz?.readPackageActionResult) {
-  //   actionPrivileges.push('feature_integrations.read_package_action_result');
-  // }
 
   const spaceResource = 'space:' + spaceId;
 
@@ -333,10 +332,7 @@ export const hasRoutePrivileges = async (
           {
             application: 'kibana-.kibana',
             resources: [spaceResource],
-            privileges: [
-              // "feature_fleetv2.all",
-              'feature_fleet.all',
-            ],
+            privileges: ['feature_fleet.all'],
           },
         ],
       },
@@ -381,26 +377,3 @@ export const hasRoutePrivileges = async (
 
   return hasPrivilegesResponse.has_all_requested || hasPackagePrivilegesResponse.has_all_requested;
 };
-
-async function authHandler(
-  fleetAuthzConfig: FleetAuthzRouteConfig,
-  nextHandler: FleetRequestHandler<any, any, any>,
-  context: FleetRequestHandlerContext,
-  request: KibanaRequest,
-  response: KibanaResponseFactory
-) {
-  const fleetContext = await context.fleet;
-  if (!(await hasRoutePrivileges(request, fleetAuthzConfig, fleetContext.spaceId))) {
-    return response.forbidden();
-  }
-
-  // TODO remove, for testing
-  return response.forbidden();
-
-  return nextHandler(context, request, response);
-}
-
-export const authzHandlerWrapper = (
-  fleetAuthzConfig: FleetAuthzRouteConfig,
-  nextHandler: FleetRequestHandler<any, any, any>
-) => authHandler.bind(null, fleetAuthzConfig, nextHandler);

@@ -278,17 +278,13 @@ class AgentPolicyService {
       agentPolicy.package_policies =
         (await packagePolicyService.getByIDs(
           soClient,
-          (agentPolicySO.attributes.package_policies as string[]) || [],
-          {
-            ignoreMissing: true,
-          }
+          (agentPolicySO.attributes.package_policies as string[]) || []
         )) || [];
     }
 
     return agentPolicy;
   }
 
-  // TODO refactor get to return saved object as well for references
   public async getSO(
     soClient: SavedObjectsClientContract,
     id: string
@@ -400,8 +396,6 @@ class AgentPolicyService {
         page: 1,
         perPage: SO_SEARCH_LIMIT,
       });
-      // console.log(spaces);
-      // console.log(JSON.stringify(agentPoliciesSO, null, 2));
     }
 
     const agentPolicies = await pMap(
@@ -700,7 +694,6 @@ class AgentPolicyService {
     );
   }
 
-  // TODO references
   public async unassignPackagePolicies(
     soClient: SavedObjectsClientContract,
     esClient: ElasticsearchClient,

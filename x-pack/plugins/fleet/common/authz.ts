@@ -28,10 +28,7 @@ export interface FleetAuthz {
     writeIntegrationPolicies: boolean;
   };
 
-  // test for ui capabilities
   packages?: {
-    // packageName: string;
-    // packageActions: string[];
     manageAgentPolicy: boolean;
     managePackagePolicy: boolean;
     executePackageAction: boolean;
@@ -110,8 +107,6 @@ export const calculateAuthz = ({
     writePackageSettings: fleet.all && integrations.all,
 
     readIntegrationPolicies: fleet.all && (integrations.all || integrations.read),
-
-    // manage_all || manage_package_policy || manage_agent_policy
     writeIntegrationPolicies: fleet.all && integrations.all,
   },
 
@@ -121,10 +116,6 @@ export const calculateAuthz = ({
         managePackagePolicy: packages.all || packages.managePackagePolicy,
         executePackageAction: packages.all || packages.executePackageAction,
         readPackageActionResult: packages.all || packages.read,
-
-        // how would package resources be included in capabilities?
-        // packageName: 'endpoint',
-        // packageActions: ['*']
       }
     : undefined,
 });

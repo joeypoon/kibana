@@ -11,6 +11,51 @@ import type { Role, RoleIndexPrivilege } from '../../../common/model';
 import { copyRole } from '../../../common/model';
 import type { RoleKibanaPrivilege } from '../../../common/model/role';
 
+function getEndpointPrivilegePackages(endpointFeatures: string[]) {
+  const packages: string[] = [];
+
+  if (!endpointFeatures || !endpointFeatures.length) {
+    return packages;
+  }
+
+  if (endpointFeatures.includes('all')) {
+    packages.push('endpoint:action:all');
+    return packages;
+  }
+
+  if (endpointFeatures.includes('read')) {
+    packages.push('endpoint:action:endpoint_management_read');
+    packages.push('endpoint:action:response_actions_management_read');
+    return packages;
+  }
+
+  if (endpointFeatures.includes('endpoint_management_all')) {
+    packages.push('endpoint:action:endpoint_management_write');
+  } else if (endpointFeatures.includes('endpoint_management_read')) {
+    packages.push('endpoint:action:endpoint_management_read');
+  }
+
+  if (endpointFeatures.includes('response_actions_management_all')) {
+    packages.push('endpoint:action:response_actions_management_write');
+  } else if (endpointFeatures.includes('response_actions_management_read')) {
+    packages.push('endpoint:action:response_actions_management_read');
+  }
+
+  if (endpointFeatures.includes('host_isolation_all')) {
+    packages.push('endpoint:action:isolate_hosts');
+  }
+
+  if (endpointFeatures.includes('process_operations_all')) {
+    packages.push('endpoint:action:process_operations');
+  }
+
+  if (endpointFeatures.includes('file_operations_all')) {
+    packages.push('endpoint:action:file_operations');
+  }
+
+  return packages;
+}
+
 export class RolesAPIClient {
   constructor(private readonly http: HttpStart) {}
 
@@ -49,17 +94,8 @@ export class RolesAPIClient {
       if (kibanaPrivilege.base.length > 0) {
         kibanaPrivilege.feature = {};
       }
-      // TODO remove, for testing - packages will come from roles UI
-      if (kibanaPrivilege.feature!.integrations)
-        kibanaPrivilege.packages = [
-          'endpoint:*',
-          'endpoint:action:*',
-          'endpoint:action:isolate_host',
-        ];
-      // 'endpoint:action:isolate_host'];
-      else kibanaPrivilege.packages = [];
 
-      // console.log(JSON.stringify(kibanaPrivilege, null, 2));
+      kibanaPrivilege.packages = getEndpointPrivilegePackages(kibanaPrivilege.feature?.siem);
     });
 
     // @ts-expect-error

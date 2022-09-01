@@ -267,9 +267,7 @@ export class FleetPlugin implements Plugin<FleetSetup, FleetStart, FleetSetupDep
       Component: LazyCustomLogsAssetsExtension,
     });
     const { capabilities } = core.application;
-    // console.log(JSON.stringify(capabilities, null, 2));
 
-    //  capabilities.fleetv2 returns fleet privileges and capabilities.fleet returns integrations privileges
     return {
       authz: {
         ...calculateAuthz({

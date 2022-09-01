@@ -14,6 +14,10 @@ export interface EndpointAuthz {
   canAccessFleet: boolean;
   /** If user has permissions to access Endpoint management (includes check to ensure they also have access to fleet) */
   canAccessEndpointManagement: boolean;
+  /** If user has permissions to read response actions management */
+  canReadResponseActionsManagement: boolean;
+  /** If user has permissions to edit response actions management */
+  canWriteResponseActionsManagement: boolean;
   /** if user has permissions to create Artifacts by Policy */
   canCreateArtifactsByPolicy: boolean;
   /** If user has permissions to isolate hosts */

@@ -78,7 +78,7 @@ const getSavedObjectTypes = (
     name: AGENT_POLICY_SAVED_OBJECT_TYPE,
     hidden: false,
     namespaceType: 'multiple',
-    convertToMultiNamespaceTypeVersion: '8.3.0',
+    convertToMultiNamespaceTypeVersion: '8.4.0',
     management: {
       importableAndExportable: false,
     },
@@ -142,7 +142,7 @@ const getSavedObjectTypes = (
     name: PACKAGE_POLICY_SAVED_OBJECT_TYPE,
     hidden: false,
     namespaceType: 'multiple',
-    convertToMultiNamespaceTypeVersion: '8.3.0',
+    convertToMultiNamespaceTypeVersion: '8.4.0',
     management: {
       importableAndExportable: false,
     },

@@ -10,33 +10,7 @@ import type { Capabilities } from '@kbn/core/types';
 
 import { appContextService } from '.';
 
-// {
-//   "cluster": [],
-//   "global": [],
-//   "indices": [],
-//   "applications": [
-//     {
-//       "application": "kibana-.kibana",
-//       "privileges": [
-//         "feature_fleet.read",
-//         "feature_integrations.manage_package_policy",
-//         "feature_fleetv2.all",
-//         "feature_integrations.minimal_read",
-//         "feature_integrations.execute_package_action",
-//       ],
-//       "resources": [
-//         "package:endpoint:action:*",
-//         "package:endpoint:action:isolate_hosts",
-//         "space:default",
-//         "package:endpoint:*"
-//       ]
-//     }
-//   ],
-//   "run_as": []
-// }
-
 export const capabilitiesProvider: CapabilitiesProvider = () => {
-  // TODO generate for each package and action
   return {
     packages: {
       endpoint: {
@@ -45,7 +19,25 @@ export const capabilitiesProvider: CapabilitiesProvider = () => {
           all: {
             executePackageAction: false,
           },
+          endpoint_management_write: {
+            executePackageAction: false,
+          },
+          endpoint_management_read: {
+            executePackageAction: false,
+          },
+          response_actions_management_write: {
+            executePackageAction: false,
+          },
+          response_actions_management_read: {
+            executePackageAction: false,
+          },
           isolate_hosts: {
+            executePackageAction: false,
+          },
+          process_operations: {
+            executePackageAction: false,
+          },
+          file_operations: {
             executePackageAction: false,
           },
         },
@@ -67,8 +59,6 @@ export const capabilitiesSwitcher = async (
       .getClusterClient()
       .asScoped(request)
       .asCurrentUser.security.getUserPrivileges();
-
-    // console.log(JSON.stringify(privileges, null, 2));
 
     const capabilities = privileges.applications
       .filter((app) => app.application === 'kibana-.kibana')
@@ -121,7 +111,6 @@ export const capabilitiesSwitcher = async (
         return { ...acc, ...curr };
       }, {});
 
-    // console.log(JSON.stringify({packages: capabilities}, null, 2));
     return { packages: capabilities };
   }
 
