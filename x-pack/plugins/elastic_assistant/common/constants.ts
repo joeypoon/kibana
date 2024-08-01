@@ -17,6 +17,10 @@ export const ATTACK_DISCOVERY = `${BASE_PATH}/attack_discovery`;
 export const ATTACK_DISCOVERY_BY_CONNECTOR_ID = `${ATTACK_DISCOVERY}/{connectorId}`;
 export const ATTACK_DISCOVERY_CANCEL_BY_CONNECTOR_ID = `${ATTACK_DISCOVERY}/cancel/{connectorId}`;
 
+// Defend insights
+export const DEFEND_INSIGHTS = `${BASE_PATH}/defend_insights`;
+export const DEFEND_INSIGHTS_BY_CONNECTOR_ID = `${DEFEND_INSIGHTS}/{connectorId}`;
+
 // Model Evaluation
 export const EVALUATE = `${BASE_PATH}/evaluate`;
 

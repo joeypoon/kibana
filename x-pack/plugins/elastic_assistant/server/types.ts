@@ -28,6 +28,7 @@ import { RetrievalQAChain } from 'langchain/chains';
 import { ElasticsearchClient } from '@kbn/core/server';
 import {
   AttackDiscoveryPostRequestBody,
+  DefendInsightsPostRequestBody,
   AssistantFeatures,
   ExecuteConnectorRequestBody,
   Replacements,
@@ -50,6 +51,7 @@ import { AIAssistantConversationsDataClient } from './ai_assistant_data_clients/
 import type { GetRegisteredFeatures, GetRegisteredTools } from './services/app_context';
 import { AIAssistantDataClient } from './ai_assistant_data_clients';
 import { AIAssistantKnowledgeBaseDataClient } from './ai_assistant_data_clients/knowledge_base';
+import type { DefendInsightsDataClient } from './ai_assistant_data_clients/defend_insights';
 
 export const PLUGIN_ID = 'elasticAssistant' as const;
 
@@ -121,6 +123,7 @@ export interface ElasticAssistantApiRequestHandlerContext {
   getAIAssistantConversationsDataClient: () => Promise<AIAssistantConversationsDataClient | null>;
   getAIAssistantKnowledgeBaseDataClient: () => Promise<AIAssistantKnowledgeBaseDataClient | null>;
   getAttackDiscoveryDataClient: () => Promise<AttackDiscoveryDataClient | null>;
+  getDefendInsightsDataClient: () => Promise<DefendInsightsDataClient | null>;
   getAIAssistantPromptsDataClient: () => Promise<AIAssistantDataClient | null>;
   getAIAssistantAnonymizationFieldsDataClient: () => Promise<AIAssistantDataClient | null>;
   telemetry: AnalyticsServiceSetup;
@@ -156,6 +159,7 @@ export interface AssistantResourceNames {
     prompts: string;
     anonymizationFields: string;
     attackDiscovery: string;
+    defendInsights: string;
   };
   indexTemplate: {
     conversations: string;
@@ -163,6 +167,7 @@ export interface AssistantResourceNames {
     prompts: string;
     anonymizationFields: string;
     attackDiscovery: string;
+    defendInsights: string;
   };
   aliases: {
     conversations: string;
@@ -170,6 +175,7 @@ export interface AssistantResourceNames {
     prompts: string;
     anonymizationFields: string;
     attackDiscovery: string;
+    defendInsights: string;
   };
   indexPatterns: {
     conversations: string;
@@ -177,6 +183,7 @@ export interface AssistantResourceNames {
     prompts: string;
     anonymizationFields: string;
     attackDiscovery: string;
+    defendInsights: string;
   };
   pipelines: {
     knowledgeBase: string;
@@ -239,7 +246,7 @@ export interface AssistantToolParams {
   request: KibanaRequest<
     unknown,
     unknown,
-    ExecuteConnectorRequestBody | AttackDiscoveryPostRequestBody
+    ExecuteConnectorRequestBody | AttackDiscoveryPostRequestBody | DefendInsightsPostRequestBody
   >;
   size?: number;
 }
