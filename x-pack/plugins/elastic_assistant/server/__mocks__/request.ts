@@ -10,7 +10,10 @@ import {
   ATTACK_DISCOVERY_BY_CONNECTOR_ID,
   ATTACK_DISCOVERY_CANCEL_BY_CONNECTOR_ID,
   CAPABILITIES,
+  DEFEND_INSIGHTS,
+  DEFEND_INSIGHTS_BY_CONNECTOR_ID,
 } from '../../common/constants';
+import type { DefendInsightsPostRequestBody } from '@kbn/elastic-assistant-common';
 import {
   AttackDiscoveryPostRequestBody,
   ConversationCreateProps,
@@ -206,5 +209,19 @@ export const postAttackDiscoveryRequest = (body: AttackDiscoveryPostRequestBody)
   requestMock.create({
     method: 'post',
     path: ATTACK_DISCOVERY,
+    body,
+  });
+
+export const getDefendInsightsRequest = (connectorId: string) =>
+  requestMock.create({
+    method: 'get',
+    path: DEFEND_INSIGHTS_BY_CONNECTOR_ID,
+    params: { connectorId },
+  });
+
+export const postDefendInsightsRequest = (body: DefendInsightsPostRequestBody) =>
+  requestMock.create({
+    method: 'post',
+    path: DEFEND_INSIGHTS,
     body,
   });
