@@ -25,6 +25,9 @@ describe(
       ftrConfig: {
         kbnServerArgs: [
           `--xpack.securitySolutionServerless.usageReportingTaskInterval=1m`,
+          `--xpack.securitySolutionServerless.usageApi.tls.key=tls.key`,
+          `--xpack.securitySolutionServerless.usageApi.tls.certificate=tls.crt`,
+          `--xpack.securitySolutionServerless.usageApi.tls.ca=ca.crt`,
           `--xpack.securitySolutionServerless.usageApi.url=https://localhost:3623`,
         ],
       },

@@ -7,3 +7,4 @@
 
 export * from './hooks';
 export * from './use_endpoint_action_items';
+export * from './defend_insights';

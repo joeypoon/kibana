@@ -8,6 +8,7 @@
 /** By default, these fields are allowed to be sent to the assistant */
 export const DEFAULT_ALLOW = [
   '_id',
+  'agent.id',
   '@timestamp',
   'cloud.availability_zone',
   'cloud.provider',
