@@ -28,7 +28,7 @@ export const getDefendInsightsRoute = (router: IRouter<ElasticAssistantRequestHa
       path: DEFEND_INSIGHTS,
       security: {
         authz: {
-          requiredPrivileges: ['elasticAssistant'],
+          requiredPrivileges: ['securitySolution-workflowInsights'],
         },
       },
     })

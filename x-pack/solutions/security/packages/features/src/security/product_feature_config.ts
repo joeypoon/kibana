@@ -67,7 +67,7 @@ export const securityDefaultProductFeaturesConfig: DefaultSecurityProductFeature
   },
 
   [ProductFeatureSecurityKey.endpointHostManagement]: {
-    subFeatureIds: [SecuritySubFeatureId.endpointList],
+    subFeatureIds: [SecuritySubFeatureId.endpointList, SecuritySubFeatureId.workflowInsights],
   },
 
   [ProductFeatureSecurityKey.endpointPolicyManagement]: {

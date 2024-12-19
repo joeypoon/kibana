@@ -48,7 +48,7 @@ export const postDefendInsightsRoute = (router: IRouter<ElasticAssistantRequestH
       },
       security: {
         authz: {
-          requiredPrivileges: ['elasticAssistant'],
+          requiredPrivileges: ['securitySolution-workflowInsights'],
         },
       },
     })

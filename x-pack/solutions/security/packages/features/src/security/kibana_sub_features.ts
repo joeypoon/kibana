@@ -645,6 +645,46 @@ const endpointExceptionsSubFeature = (): SubFeatureConfig => ({
   ],
 });
 
+const workflowInsightsSubFeature = (): SubFeatureConfig => ({
+  requireAllSpaces: true,
+  privilegesTooltip: i18n.translate(
+    'securitySolutionPackages.features.featureRegistry.subFeatures.workflowInsights.privilegesTooltip',
+    {
+      defaultMessage: 'All Spaces is required for Workflow Insights access.',
+    }
+  ),
+  name: i18n.translate(
+    'securitySolutionPackages.features.featureRegistry.subFeatures.workflowInsights',
+    {
+      defaultMessage: 'Workflow Insights',
+    }
+  ),
+  description: i18n.translate(
+    'securitySolutionPackages.features.featureRegistry.subFeatures.workflowInsights.description',
+    {
+      defaultMessage: 'So insightful.',
+    }
+  ),
+  privilegeGroups: [
+    {
+      groupType: 'mutually_exclusive',
+      privileges: [
+        {
+          api: [`${APP_ID}-workflowInsights`],
+          id: 'workflow_insights_all',
+          includeIn: 'none',
+          name: 'All',
+          savedObject: {
+            all: [],
+            read: [],
+          },
+          ui: ['workflowInsights'],
+        },
+      ],
+    },
+  ],
+});
+
 /**
  * Sub-features that will always be available for Security
  * regardless of the product type.
@@ -702,6 +742,10 @@ export const getSecuritySubFeaturesMap = ({
     [SecuritySubFeatureId.fileOperations, enableSpaceAwarenessIfNeeded(fileOperationsSubFeature())],
     [SecuritySubFeatureId.executeAction, enableSpaceAwarenessIfNeeded(executeActionSubFeature())],
     [SecuritySubFeatureId.scanAction, enableSpaceAwarenessIfNeeded(scanActionSubFeature())],
+    [
+      SecuritySubFeatureId.workflowInsights,
+      enableSpaceAwarenessIfNeeded(workflowInsightsSubFeature()),
+    ],
   ];
 
   // Use the following code to add feature based on feature flag
