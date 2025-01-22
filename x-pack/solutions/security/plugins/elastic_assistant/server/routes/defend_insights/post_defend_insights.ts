@@ -5,10 +5,8 @@
  * 2.0.
  */
 
-import moment from 'moment/moment';
-
 import type { IKibanaResponse } from '@kbn/core/server';
-
+import moment from 'moment/moment';
 import { buildRouteValidationWithZod } from '@kbn/elastic-assistant-common/impl/schemas/common';
 import {
   DEFEND_INSIGHTS,
@@ -22,15 +20,14 @@ import { IRouter, Logger } from '@kbn/core/server';
 
 import { buildResponse } from '../../lib/build_response';
 import { ElasticAssistantRequestHandlerContext } from '../../types';
-import { DEFAULT_PLUGIN_NAME, getPluginNameFromRequest } from '../helpers';
 import {
-  getAssistantTool,
-  getAssistantToolParams,
-  handleToolError,
   createDefendInsight,
   updateDefendInsights,
   isDefendInsightsEnabled,
+  invokeDefendInsightsGraph,
+  handleGraphError,
 } from './helpers';
+import { CallbackIds, appContextService } from '../../services/app_context';
 
 const ROUTE_HANDLER_TIMEOUT = 10 * 60 * 1000; // 10 * 60 seconds = 10 minutes
 const LANG_CHAIN_TIMEOUT = ROUTE_HANDLER_TIMEOUT - 10_000; // 9 minutes 50 seconds
@@ -113,17 +110,6 @@ export const postDefendInsightsRoute = (router: IRouter<ElasticAssistantRequestH
             });
           }
 
-          const pluginName = getPluginNameFromRequest({
-            request,
-            defaultPluginName: DEFAULT_PLUGIN_NAME,
-            logger,
-          });
-          const assistantTool = getAssistantTool(assistantContext.getRegisteredTools, pluginName);
-
-          if (!assistantTool) {
-            return response.notFound();
-          }
-
           const {
             endpointIds,
             insightType,
@@ -141,26 +127,6 @@ export const postDefendInsightsRoute = (router: IRouter<ElasticAssistantRequestH
             latestReplacements = { ...latestReplacements, ...newReplacements };
           };
 
-          const assistantToolParams = getAssistantToolParams({
-            endpointIds,
-            insightType,
-            actionsClient,
-            anonymizationFields,
-            apiConfig,
-            esClient,
-            latestReplacements,
-            contentReferencesStore: false,
-            connectorTimeout: CONNECTOR_TIMEOUT,
-            langChainTimeout: LANG_CHAIN_TIMEOUT,
-            langSmithProject,
-            langSmithApiKey,
-            logger,
-            onNewReplacements,
-            request,
-          });
-
-          const toolInstance = assistantTool.getTool(assistantToolParams);
-
           const { currentInsight, defendInsightId } = await createDefendInsight(
             endpointIds,
             insightType,
@@ -169,23 +135,41 @@ export const postDefendInsightsRoute = (router: IRouter<ElasticAssistantRequestH
             apiConfig
           );
 
-          toolInstance
-            ?.invoke('')
-            .then((rawDefendInsights: string) =>
+          invokeDefendInsightsGraph({
+            insightType,
+            endpointIds,
+            actionsClient,
+            anonymizationFields,
+            apiConfig,
+            connectorTimeout: CONNECTOR_TIMEOUT,
+            esClient,
+            langSmithProject,
+            langSmithApiKey,
+            latestReplacements,
+            logger,
+            onNewReplacements,
+          })
+            .then(({ anonymizedEvents, insights }) =>
               updateDefendInsights({
+                anonymizedEvents,
                 apiConfig,
                 defendInsightId,
+                insights,
                 authenticatedUser,
                 dataClient,
                 latestReplacements,
                 logger,
-                rawDefendInsights,
                 startTime,
                 telemetry,
-              })
+              }).then(() => insights)
+            )
+            .then((insights) =>
+              appContextService
+                .getRegisteredCallbacks(CallbackIds.DefendInsightsPostCreate)
+                .map((cb) => cb(insights, request))
             )
             .catch((err) =>
-              handleToolError({
+              handleGraphError({
                 apiConfig,
                 defendInsightId,
                 authenticatedUser,
