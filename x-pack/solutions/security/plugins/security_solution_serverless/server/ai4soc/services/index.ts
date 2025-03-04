@@ -5,15 +5,4 @@
  * 2.0.
  */
 
-export enum ProductLine {
-  security = 'security',
-  aiSoc = 'ai_soc',
-  endpoint = 'endpoint',
-  cloud = 'cloud',
-}
-
-export enum ProductTier {
-  searchAiLake = 'search_ai_lake',
-  essentials = 'essentials',
-  complete = 'complete',
-}
+export { ai4SocMeteringService } from './metering_service';
