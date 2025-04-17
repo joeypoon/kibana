@@ -120,17 +120,26 @@ export const stubPutWorkflowInsightsApiResponse = () => {
 };
 
 export const stubDefendInsightsApiResponse = (
-  overrides: Record<string, string> = {},
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  overrides: Record<string, any> = {},
   config: { times?: number } = {}
 ) => {
   cy.intercept(
     {
       method: 'GET',
-      url: '**/internal/elastic_assistant/defend_insights?status=running**',
+      url: '**/internal/elastic_assistant/defend_insights**',
       ...(config.times ? { times: config.times } : {}),
     },
     (req) => {
       req.continue((res) => {
+        const mockInsights =
+          overrides.status === 'succeeded'
+            ? [
+                { id: '1', value: 'insight1' },
+                { id: '2', value: 'insight2' },
+              ]
+            : [];
+
         return res.send(200, {
           data: [
             {
@@ -155,7 +164,7 @@ export const stubDefendInsightsApiResponse = (
               },
               endpointIds: ['33581c4f-bef1-4162-9809-4c208e2e1991'],
               insightType: 'incompatible_antivirus',
-              insights: [],
+              insights: mockInsights,
               generationIntervals: [],
               averageIntervalMs: 0,
               ...overrides,

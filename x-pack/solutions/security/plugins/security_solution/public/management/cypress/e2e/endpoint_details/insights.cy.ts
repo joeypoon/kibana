@@ -99,7 +99,6 @@ describe(
 
         loadEndpointDetailsFlyout(endpointId);
 
-        expectWorkflowInsightsApiToBeCalled();
         expectDefendInsightsApiToBeCalled();
 
         chooseConnectorButtonExistsWithLabel('Select a connector');
@@ -158,8 +157,8 @@ describe(
         clickScanButton();
 
         expectPostDefendInsightsApiToBeCalled();
-        expectWorkflowInsightsApiToBeCalled();
         expectDefendInsightsApiToBeCalled();
+        expectWorkflowInsightsApiToBeCalled();
       });
 
       it('should render existing Insights', () => {
