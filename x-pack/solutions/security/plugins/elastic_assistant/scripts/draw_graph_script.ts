@@ -21,6 +21,7 @@ import { createOpenAIFunctionsAgent } from 'langchain/agents';
 import { actionsClientMock } from '@kbn/actions-plugin/server/actions_client/actions_client.mock';
 import { coreMock, savedObjectsClientMock } from '@kbn/core/server/mocks';
 import { newContentReferencesStoreMock } from '@kbn/elastic-assistant-common/impl/content_references/content_references_store/__mocks__/content_references_store.mock';
+import { DefendInsightType } from '@kbn/elastic-assistant-common';
 import {
   ATTACK_DISCOVERY_GENERATION_DETAILS_MARKDOWN,
   ATTACK_DISCOVERY_GENERATION_ENTITY_SUMMARY_MARKDOWN,
@@ -31,9 +32,11 @@ import {
   ATTACK_DISCOVERY_CONTINUE,
   ATTACK_DISCOVERY_DEFAULT,
   ATTACK_DISCOVERY_REFINE,
+  DEFEND_INSIGHTS,
 } from '../server/lib/prompt/prompts';
 import { getDefaultAssistantGraph } from '../server/lib/langchain/graphs/default_assistant_graph/graph';
 import { getDefaultAttackDiscoveryGraph } from '../server/lib/attack_discovery/graphs/default_attack_discovery_graph';
+import { getDefaultDefendInsightsGraph } from '../server/lib/defend_insights/graphs/default_defend_insights_graph';
 
 interface Drawable {
   drawMermaidPng: () => Promise<Blob>;
@@ -102,6 +105,33 @@ async function getAttackDiscoveryGraph(logger: Logger): Promise<Drawable> {
   return graph.getGraph();
 }
 
+async function getDefendInsightsGraph(logger: Logger): Promise<Drawable> {
+  const mockEsClient = {} as unknown as ElasticsearchClient;
+
+  const graph = getDefaultDefendInsightsGraph({
+    insightType: DefendInsightType.Enum.incompatible_antivirus,
+    endpointIds: ['mock-endpoint-1'],
+    anonymizationFields: [],
+    esClient: mockEsClient,
+    llm: mockLlm as unknown as ActionsClientLlm,
+    logger,
+    replacements: {},
+    prompts: {
+      default: DEFEND_INSIGHTS.INCOMPATIBLE_ANTIVIRUS.DEFAULT,
+      refine: DEFEND_INSIGHTS.INCOMPATIBLE_ANTIVIRUS.REFINE,
+      continue: DEFEND_INSIGHTS.INCOMPATIBLE_ANTIVIRUS.CONTINUE,
+      group: DEFEND_INSIGHTS.INCOMPATIBLE_ANTIVIRUS.GROUP,
+      events: DEFEND_INSIGHTS.INCOMPATIBLE_ANTIVIRUS.EVENTS,
+      eventsId: DEFEND_INSIGHTS.INCOMPATIBLE_ANTIVIRUS.EVENTS_ID,
+      eventsEndpointId: DEFEND_INSIGHTS.INCOMPATIBLE_ANTIVIRUS.EVENTS_ENDPOINT_ID,
+      eventsValue: DEFEND_INSIGHTS.INCOMPATIBLE_ANTIVIRUS.EVENTS_VALUE,
+    },
+    size: 20,
+  });
+
+  return graph.getGraph();
+}
+
 export const drawGraph = async ({
   getGraph,
   outputFilename,
@@ -131,5 +161,10 @@ export const draw = async () => {
   await drawGraph({
     getGraph: getAttackDiscoveryGraph,
     outputFilename: '../docs/img/default_attack_discovery_graph.png',
+  });
+
+  await drawGraph({
+    getGraph: getDefendInsightsGraph,
+    outputFilename: '../docs/img/default_defend_insights_graph.png',
   });
 };
