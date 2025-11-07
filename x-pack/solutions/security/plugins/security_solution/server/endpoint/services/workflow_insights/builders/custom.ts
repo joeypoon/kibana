@@ -18,7 +18,7 @@ import {
 
 const groupSeparator = ':::';
 
-export async function buildPolicyResponseFailureWorkflowInsights({
+export async function buildCustomWorkflowInsights({
   defendInsights,
   options,
 }: BuildWorkflowInsightParams): Promise<SecurityWorkflowInsight[]> {
@@ -31,7 +31,7 @@ export async function buildPolicyResponseFailureWorkflowInsights({
       const displayName = insight.group.split(groupSeparator)[1];
       const workflowInsight: SecurityWorkflowInsight = {
         '@timestamp': currentTime,
-        message: 'Policy response failure detected',
+        message: 'Potential issue detected',
         category: Category.Endpoint,
         type: insightType,
         source: {
@@ -57,7 +57,7 @@ export async function buildPolicyResponseFailureWorkflowInsights({
         },
         remediation: {
           descriptive: (insight.remediation?.message as string) ?? '',
-          link: (insight.remediation?.link as string) ?? '',
+          // link: (insight.remediation?.link as string) ?? '',
         },
       };
 

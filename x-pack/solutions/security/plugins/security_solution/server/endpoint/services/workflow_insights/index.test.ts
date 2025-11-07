@@ -278,16 +278,24 @@ describe('SecurityWorkflowInsightsService', () => {
       });
       const result = await securityWorkflowInsightsService.createFromDefendInsights(
         defendInsights,
-        request
+        request.body.endpointIds,
+        request.body.insightType,
+        request.body.apiConfig.connectorId,
+        request.body.apiConfig.model
       );
 
       // four since it calls fetch + update + fetch + create
       expect(isInitializedSpy).toHaveBeenCalledTimes(4);
       expect(buildWorkflowInsightsMock).toHaveBeenCalledWith({
         defendInsights,
-        request,
         endpointMetadataService: expect.any(Object),
         esClient,
+        options: {
+          insightType: request.body.insightType,
+          endpointIds: request.body.endpointIds,
+          connectorId: request.body.apiConfig.connectorId,
+          model: request.body.apiConfig.model,
+        },
       });
       expect(result).toEqual(workflowInsights.map(() => esClientIndexResp));
     });
