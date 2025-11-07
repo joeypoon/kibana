@@ -34,6 +34,7 @@ export const getIndexSearchToolType = (): ToolTypeDefinition<
               pattern,
               row_limit: rowLimit,
               custom_instructions: customInstructions,
+              includeKibanaIndices,
             } = config;
             const results = await runSearchTool({
               nlQuery,
@@ -43,6 +44,9 @@ export const getIndexSearchToolType = (): ToolTypeDefinition<
               esClient: esClient.asCurrentUser,
               model: await modelProvider.getDefaultModel(),
               events,
+              options: {
+                includeKibanaIndices,
+              },
               logger,
             });
             return { results };

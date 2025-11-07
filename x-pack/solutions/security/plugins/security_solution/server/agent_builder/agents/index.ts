@@ -8,8 +8,10 @@
 import type { AgentBuilderPluginSetup } from '@kbn/agent-builder-plugin/server';
 import type { Logger } from '@kbn/logging';
 import type { SecuritySolutionPluginCoreSetupDependencies } from '../../plugin_contract';
+import type { ExperimentalFeatures } from '../../../common/experimental_features';
 
 import { createThreatHuntingAgent } from './threat_hunting_agent';
+import { registerDefendInsightsAgent } from '../../endpoint/lib/defend_insights/register';
 
 /**
  * Registers all security agent builder tools with the agentBuilder plugin
@@ -17,7 +19,11 @@ import { createThreatHuntingAgent } from './threat_hunting_agent';
 export const registerAgents = async (
   agentBuilder: AgentBuilderPluginSetup,
   core: SecuritySolutionPluginCoreSetupDependencies,
-  logger: Logger
+  logger: Logger,
+  options: { experimentalFeatures: ExperimentalFeatures }
 ) => {
   agentBuilder.agents.register(createThreatHuntingAgent(core, logger));
+  if (options.experimentalFeatures.automaticTroubleshootingAgent) {
+    registerDefendInsightsAgent(agentBuilder, logger);
+  }
 };

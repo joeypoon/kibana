@@ -20,9 +20,9 @@ const groupSeparator = ':::';
 
 export async function buildPolicyResponseFailureWorkflowInsights({
   defendInsights,
-  request,
+  options,
 }: BuildWorkflowInsightParams): Promise<SecurityWorkflowInsight[]> {
-  const { insightType, endpointIds, apiConfig } = request.body;
+  const { insightType, endpointIds, connectorId, model } = options;
   const currentTime = moment();
 
   return defendInsights
@@ -36,7 +36,7 @@ export async function buildPolicyResponseFailureWorkflowInsights({
         type: insightType,
         source: {
           type: SourceType.LlmConnector,
-          id: apiConfig.connectorId,
+          id: connectorId ?? '',
           data_range_start: currentTime,
           data_range_end: currentTime,
         },
@@ -51,7 +51,7 @@ export async function buildPolicyResponseFailureWorkflowInsights({
         value: insight.group,
         metadata: {
           notes: {
-            llm_model: apiConfig.model ?? '',
+            llm_model: model ?? '',
           },
           display_name: displayName,
         },
