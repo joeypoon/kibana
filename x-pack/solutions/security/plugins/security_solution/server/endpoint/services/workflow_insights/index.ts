@@ -18,6 +18,7 @@ import type {
   DefendInsightsGetRequestQuery,
   DefendInsightsPostRequestBody,
 } from '@kbn/elastic-assistant-common';
+import type { ScopedModel } from '@kbn/onechat-server';
 import { CallbackIds } from '@kbn/elastic-assistant-plugin/server/types';
 import { combineLatest, firstValueFrom, ReplaySubject } from 'rxjs';
 import { cloneDeep } from 'lodash';
@@ -296,14 +297,55 @@ class SecurityWorkflowInsightsService {
 
     const workflowInsights = await buildWorkflowInsights({
       defendInsights,
-      request,
       endpointMetadataService: this.endpointContext.getEndpointMetadataService(),
       esClient: this.esClient,
+      options: {
+        insightType: request.body.insightType,
+        endpointIds: request.body.endpointIds,
+        connectorId: request.body.apiConfig.connectorId,
+        model: request.body.apiConfig.model,
+      },
     });
 
     const uniqueInsights = getUniqueInsights(workflowInsights);
 
     return Promise.all(uniqueInsights.map((insight) => this.create(insight)));
+  }
+
+  // TODO merge this
+  public async createFromAgentDefendInsights(
+    defendInsights: DefendInsight[],
+    endpointIds: string[],
+    insightType: DefendInsightType,
+    model: ScopedModel
+  ): Promise<SecurityWorkflowInsight[]> {
+    await this.isInitialized;
+
+    // suppress existing insights since they might be stale, any current ones will be refreshed
+    await this.suppressExistingInsights(endpointIds, [insightType]);
+
+    // comes after suppression since we should always suppress stale insights
+    if (!defendInsights || !defendInsights.length) {
+      return [];
+    }
+
+    const workflowInsights = await buildWorkflowInsights({
+      defendInsights,
+      endpointMetadataService: this.endpointContext.getEndpointMetadataService(),
+      esClient: this.esClient,
+      options: {
+        insightType,
+        endpointIds,
+        connectorId: model.connector.connectorId,
+        model: model.chatModel.name,
+      },
+    });
+
+    const uniqueInsights = getUniqueInsights(workflowInsights);
+
+    await Promise.all(uniqueInsights.map((insight) => this.create(insight)));
+
+    return uniqueInsights;
   }
 
   public async ensureAgentIdsInCurrentSpace(

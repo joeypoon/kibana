@@ -8,7 +8,7 @@
 import { take } from 'lodash';
 import { z } from '@kbn/zod';
 import type { Logger } from '@kbn/logging';
-import { EsResourceType } from '@kbn/onechat-common';
+import { EsResourceType, type IndexExplorerOptions } from '@kbn/onechat-common';
 import type { ScopedModel } from '@kbn/onechat-server';
 import type { BaseMessageLike } from '@langchain/core/messages';
 import type { ElasticsearchClient } from '@kbn/core-elasticsearch-server';
@@ -110,6 +110,7 @@ export const indexExplorer = async ({
   limit = 1,
   esClient,
   model,
+  options,
   logger,
 }: {
   nlQuery: string;
@@ -119,6 +120,7 @@ export const indexExplorer = async ({
   limit?: number;
   esClient: ElasticsearchClient;
   model: ScopedModel;
+  options?: IndexExplorerOptions;
   logger?: Logger;
 }): Promise<IndexExplorerResponse> => {
   logger?.trace(() => `index_explorer - query="${nlQuery}", pattern="${indexPattern}"`);
@@ -127,6 +129,7 @@ export const indexExplorer = async ({
     pattern: indexPattern,
     excludeIndicesRepresentedAsDatastream: true,
     excludeIndicesRepresentedAsAlias: false,
+    includeKibanaIndices: options?.includeKibanaIndices ?? false,
     esClient,
   });
 

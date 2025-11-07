@@ -47,6 +47,7 @@ export {
   type OtherResult,
   type IndexSearchToolDefinitionWithSchema,
   type BrowserApiToolMetadata,
+  type IndexExplorerOptions,
 } from './tools';
 export {
   OnechatErrorCode,

@@ -30,13 +30,16 @@ export const getIndexSearchToolType = (): ToolTypeDefinition<
       return {
         getHandler: () => {
           return async ({ nlQuery }, { esClient, modelProvider, logger, events }) => {
-            const { pattern } = config;
+            const { pattern, includeKibanaIndices } = config;
             const results = await runSearchTool({
               nlQuery,
               index: pattern,
               esClient: esClient.asCurrentUser,
               model: await modelProvider.getDefaultModel(),
               events,
+              options: {
+                includeKibanaIndices,
+              },
               logger,
             });
             return { results };

@@ -146,6 +146,7 @@ import { HealthDiagnosticServiceImpl } from './lib/telemetry/diagnostic/health_d
 import type { HealthDiagnosticService } from './lib/telemetry/diagnostic/health_diagnostic_service.types';
 import { ENTITY_RISK_SCORE_TOOL_ID } from './assistant/tools/entity_risk_score/entity_risk_score';
 import type { TelemetryQueryConfiguration } from './lib/telemetry/types';
+import { registerDefendInsights } from './endpoint/lib/defend_insights';
 
 export type { SetupPlugins, StartPlugins, PluginSetup, PluginStart } from './plugin_contract';
 
@@ -602,6 +603,9 @@ export class Plugin implements ISecuritySolutionPlugin {
     } else {
       this.logger.warn('Task Manager not available, health diagnostic task not registered.');
     }
+
+    // onechat registrations
+    registerDefendInsights(plugins.onechat, this.logger);
 
     return {
       setProductFeaturesConfigurator:

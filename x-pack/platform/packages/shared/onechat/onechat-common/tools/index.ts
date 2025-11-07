@@ -38,6 +38,7 @@ export {
   type IndexSearchToolDefinition,
   type IndexSearchToolDefinitionWithSchema,
   type IndexSearchToolConfig,
+  type IndexExplorerOptions,
 } from './types/index_search';
 export {
   isWorkflowTool,

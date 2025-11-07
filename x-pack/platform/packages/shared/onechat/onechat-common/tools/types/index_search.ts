@@ -11,6 +11,11 @@ import { ToolType, type ToolDefinition, type ToolDefinitionWithSchema } from '..
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type IndexSearchToolConfig = {
   pattern: string;
+  includeKibanaIndices?: boolean;
+};
+
+export type IndexExplorerOptions = {
+  includeKibanaIndices?: boolean;
 };
 
 export type IndexSearchToolDefinition = ToolDefinition<

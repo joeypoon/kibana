@@ -12,6 +12,7 @@ import { messagesStateReducer } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import type { ScopedModel, ToolEventEmitter, ToolHandlerResult } from '@kbn/onechat-server';
 import { createErrorResult } from '@kbn/onechat-server';
+import type { IndexExplorerOptions } from '@kbn/onechat-common';
 import type { ElasticsearchClient, Logger } from '@kbn/core/server';
 import { extractTextContent } from '../../langchain';
 import { indexExplorer } from '../index_explorer';
@@ -46,11 +47,13 @@ export const createSearchToolGraph = ({
   esClient,
   logger,
   events,
+  options,
 }: {
   model: ScopedModel;
   esClient: ElasticsearchClient;
   logger: Logger;
   events: ToolEventEmitter;
+  options?: IndexExplorerOptions;
 }) => {
   const tools = [
     createRelevanceSearchTool({ model, esClient, events }),
@@ -67,6 +70,7 @@ export const createSearchToolGraph = ({
       indexPattern: state.targetPattern ?? '*',
       esClient,
       model,
+      options,
       logger,
       limit: 1,
     });

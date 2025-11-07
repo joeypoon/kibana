@@ -47,6 +47,7 @@ import type { ElasticAssistantPluginStart } from '@kbn/elastic-assistant-plugin/
 import type { InferenceServerStart } from '@kbn/inference-plugin/server';
 import type { ProductFeaturesService } from './lib/product_features_service/product_features_service';
 import type { ExperimentalFeatures } from '../common';
+import type { OnechatPluginSetup } from '@kbn/onechat-plugin/server';
 
 export interface SecuritySolutionPluginSetupDependencies {
   alerting: AlertingServerSetup;
@@ -68,6 +69,7 @@ export interface SecuritySolutionPluginSetupDependencies {
   licensing: LicensingPluginSetup;
   osquery: OsqueryPluginSetup;
   unifiedSearch: UnifiedSearchServerPluginSetup;
+  onechat: OnechatPluginSetup;
 }
 
 export interface SecuritySolutionPluginStartDependencies {
