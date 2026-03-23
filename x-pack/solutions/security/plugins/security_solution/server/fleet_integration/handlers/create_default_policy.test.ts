@@ -275,21 +275,6 @@ describe('Create Default Policy tests ', () => {
         },
       });
     });
-
-    it('should set meta.billable', async () => {
-      const isBillablePolicySpy = jest.spyOn(PolicyConfigHelpers, 'isBillablePolicy');
-      const config = createEndpointConfig({ preset: 'DataCollection' });
-
-      isBillablePolicySpy.mockReturnValue(false);
-      let policy = await createDefaultPolicyCallback(config);
-      expect(policy.meta.billable).toBe(false);
-
-      isBillablePolicySpy.mockReturnValue(true);
-      policy = await createDefaultPolicyCallback(config);
-      expect(policy.meta.billable).toBe(true);
-
-      isBillablePolicySpy.mockRestore();
-    });
   });
 
   describe('When cloud config is set', () => {

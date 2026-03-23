@@ -54,9 +54,6 @@ export const policyIndexPattern = 'metrics-endpoint.policy-*';
 
 export const telemetryIndexPattern = 'metrics-endpoint.telemetry-*';
 
-export const ENDPOINT_HEARTBEAT_INDEX = '.logs-endpoint.heartbeat-default';
-export const ENDPOINT_HEARTBEAT_INDEX_PATTERN = '.logs-endpoint.heartbeat-*';
-
 // Endpoint diagnostics index
 export const DEFAULT_DIAGNOSTIC_INDEX_PATTERN = '.logs-endpoint.diagnostic.collection-*' as const;
 

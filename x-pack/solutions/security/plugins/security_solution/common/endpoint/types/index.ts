@@ -1447,5 +1447,3 @@ export interface MetadataListResponse {
 }
 
 export type { EndpointPrivileges } from './authz';
-
-export type { EndpointHeartbeat } from './heartbeat';

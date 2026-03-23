@@ -15,7 +15,6 @@ import type { ExperimentalFeatures } from '../common/experimental_features';
 
 import { commonConfigSchema, exposeToBrowser } from '../common/config';
 import { parseExperimentalConfigValue } from '../common/experimental_features';
-import { METERING_TASK as ENDPOINT_METERING_TASK } from './endpoint/constants/metering';
 import { METERING_TASK as AI4SOC_METERING_TASK } from './ai4soc/constants/metering';
 
 const tlsConfig = schema.object({
@@ -36,8 +35,9 @@ export const serverConfigSchema = schema.object({
   enabled: schema.boolean({ defaultValue: false }),
   /**
    * Usage Reporting: the interval between runs of the endpoint task
+   * @deprecated This config key is no longer used and will be removed in a future release.
    */
-  usageReportingTaskInterval: schema.string({ defaultValue: ENDPOINT_METERING_TASK.INTERVAL }),
+  usageReportingTaskInterval: schema.string({ defaultValue: '5m' }),
 
   /**
    * Usage Reporting: the interval between runs of the cloud security task
@@ -64,12 +64,13 @@ export type ServerlessSecuritySchema = TypeOf<typeof configSchema>;
 export const config: PluginConfigDescriptor<ServerlessSecuritySchema> = {
   exposeToBrowser,
   schema: configSchema,
-  deprecations: ({ renameFromRoot }) => [
+  deprecations: ({ renameFromRoot, unused }) => [
     renameFromRoot(
       'xpack.serverless.security.productTypes',
       'xpack.securitySolutionServerless.productTypes',
       { silent: true, level: 'warning' }
     ),
+    unused('usageReportingTaskInterval', { level: 'warning' }),
   ],
 };
 

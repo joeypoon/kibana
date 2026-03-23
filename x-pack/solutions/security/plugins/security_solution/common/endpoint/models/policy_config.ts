@@ -8,8 +8,6 @@
 import type { PolicyConfig } from '../types';
 import { AntivirusRegistrationModes, DeviceControlAccessLevel, ProtectionModes } from '../types';
 
-import { isBillablePolicy } from './policy_config_helpers';
-
 /**
  * Return a new default `PolicyConfig` for platinum and above licenses
  */
@@ -197,7 +195,6 @@ export const policyFactory = ({
       },
     },
   };
-  policy.meta.billable = isBillablePolicy(policy);
 
   return policy;
 };

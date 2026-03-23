@@ -42,7 +42,6 @@ import { validateEndpointPackagePolicy } from './handlers/validate_endpoint_pack
 import {
   isPolicySetToEventCollectionOnly,
   ensureOnlyEventCollectionIsAllowed,
-  isBillablePolicy,
   removeDeviceControl,
 } from '../../common/endpoint/models/policy_config_helpers';
 import type { NewPolicyData, PolicyConfig, PolicyData } from '../../common/endpoint/types';
@@ -352,8 +351,6 @@ export const getPackagePolicyUpdateCallback = (
     }
 
     updateAntivirusRegistrationEnabled(newEndpointPackagePolicy);
-
-    newEndpointPackagePolicy.meta.billable = isBillablePolicy(newEndpointPackagePolicy);
 
     return endpointIntegrationData;
   };

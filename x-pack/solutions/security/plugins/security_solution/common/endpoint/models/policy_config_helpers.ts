@@ -264,12 +264,6 @@ export const isPolicySetToEventCollectionOnly = (
   };
 };
 
-export function isBillablePolicy(policy: PolicyConfig) {
-  if (!policy.meta.serverless) return false;
-
-  return !isPolicySetToEventCollectionOnly(policy).isOnlyCollectingEvents;
-}
-
 export const checkIfPopupMessagesContainCustomNotifications = (policy: PolicyConfig): boolean => {
   const popupRefs = getPolicyPopupReference();
 

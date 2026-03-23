@@ -7,7 +7,6 @@
 
 import { assign } from 'lodash';
 
-import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 import type { CoreSetup, ElasticsearchClient } from '@kbn/core/server';
 import type {
   TaskManagerSetupContract,
@@ -26,7 +25,6 @@ import type { SecurityUsageReportingTaskSetupContract, UsageRecord } from '../ty
 
 import { ProductLine, ProductTier } from '../../common/product';
 import { SecurityUsageReportingTask } from './usage_reporting_task';
-import { endpointMeteringService } from '../endpoint/services';
 
 describe('SecurityUsageReportingTask', () => {
   const TITLE = 'test-task-title';
@@ -151,81 +149,6 @@ describe('SecurityUsageReportingTask', () => {
     usageRecord = buildUsageRecord();
     reportUsageMock = jest.fn();
   }
-
-  describe('meteringCallback integration', () => {
-    async function setupMocks() {
-      await setupBaseMocks();
-      taskArgs = buildTaskArgs({
-        meteringCallback: endpointMeteringService.getUsageRecords,
-        config: {
-          productTypes: [
-            { product_line: ProductLine.endpoint, product_tier: ProductTier.complete },
-          ],
-          usageApi: USAGE_API_CONFIG,
-        } as ServerlessSecurityConfig,
-      });
-      mockTask = new SecurityUsageReportingTask(taskArgs);
-    }
-    beforeEach(async () => {
-      await setupMocks();
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    describe('Multiple batches', () => {
-      async function runTasksUntilNoRunAt() {
-        let task = await runTask();
-        while (task?.runAt !== undefined) {
-          task = await runTask({ ...buildMockTaskInstance({ runAt: task.runAt }) });
-        }
-      }
-
-      const heartBeats = Array.from({ length: 2001 }, (_, i) => ({
-        _source: {
-          agent: {
-            id: `test-${i}`,
-          },
-          event: {
-            ingested: '2021-09-01T00:00:00.000Z',
-          },
-        },
-      }));
-
-      const batches = [
-        heartBeats.slice(0, 1000),
-        heartBeats.slice(1000, 2000),
-        heartBeats.slice(2000),
-      ];
-
-      it('properly reports multiple batches', async () => {
-        batches.forEach((batch) => {
-          mockEsClient.search.mockResolvedValueOnce({
-            hits: {
-              hits: batch,
-            },
-          } as SearchResponse);
-        });
-
-        await runTasksUntilNoRunAt();
-
-        expect(reportUsageMock).toHaveBeenCalledTimes(3);
-        batches.forEach((batch, i) => {
-          expect(reportUsageMock).toHaveBeenNthCalledWith(
-            i + 1,
-            expect.arrayContaining(
-              batch.map(({ _source }) =>
-                expect.objectContaining({
-                  id: `endpoint-${_source.agent.id}-2021-09-01T00:00:00.000Z`,
-                })
-              )
-            )
-          );
-        });
-      });
-    });
-  });
 
   describe('Mocked meteringCallback', () => {
     async function setupMocks(backfillConfig?: { enabled: boolean; maxRecords?: number }) {

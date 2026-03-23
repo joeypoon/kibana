@@ -415,24 +415,6 @@ describe('Fleet integrations', () => {
         expect(manifestManager.commit).not.toHaveBeenCalled();
       });
 
-      it('should correctly set meta.billable', async () => {
-        const isBillablePolicySpy = jest.spyOn(PolicyConfigHelpers, 'isBillablePolicy');
-        isBillablePolicySpy.mockReturnValue(false);
-        const manifestManager = buildManifestManagerMock();
-
-        let packagePolicy = await invokeCallback(manifestManager);
-        expect(isBillablePolicySpy).toHaveBeenCalled();
-        expect(packagePolicy.inputs[0].config!.policy.value.meta.billable).toBe(false);
-
-        isBillablePolicySpy.mockReset();
-        isBillablePolicySpy.mockReturnValue(true);
-        packagePolicy = await invokeCallback(manifestManager);
-        expect(isBillablePolicySpy).toHaveBeenCalled();
-        expect(packagePolicy.inputs[0].config!.policy.value.meta.billable).toBe(true);
-
-        isBillablePolicySpy.mockRestore();
-      });
-
       it.each([false, true])(
         'should correctly set `global_telemetry_enabled` to %s',
         async (targetValue) => {
@@ -1062,7 +1044,6 @@ describe('Fleet integrations', () => {
         mockPolicy.meta.cluster_uuid = 'updated-uuid';
         mockPolicy.meta.license_uuid = 'updated-uid';
         mockPolicy.meta.serverless = false;
-        mockPolicy.meta.billable = false;
         const callback = getPackagePolicyUpdateCallback(
           endpointAppContextServiceMock,
           cloudService,
@@ -1078,7 +1059,6 @@ describe('Fleet integrations', () => {
         policyConfig.inputs[0]!.config!.policy.value.meta.cluster_uuid = 'original-uuid';
         policyConfig.inputs[0]!.config!.policy.value.meta.license_uuid = 'original-uid';
         policyConfig.inputs[0]!.config!.policy.value.meta.serverless = true;
-        policyConfig.inputs[0]!.config!.policy.value.meta.billable = true;
         const updatedPolicyConfig = await callback(
           policyConfig,
           soClient,
@@ -1097,7 +1077,6 @@ describe('Fleet integrations', () => {
         mockPolicy.meta.cluster_uuid = 'updated-uuid';
         mockPolicy.meta.license_uuid = 'updated-uid';
         mockPolicy.meta.serverless = false;
-        mockPolicy.meta.billable = false;
         const callback = getPackagePolicyUpdateCallback(
           endpointAppContextServiceMock,
           cloudService,
@@ -1112,7 +1091,6 @@ describe('Fleet integrations', () => {
         policyConfig.inputs[0]!.config!.policy.value.meta.cluster_uuid = 'updated-uuid';
         policyConfig.inputs[0]!.config!.policy.value.meta.license_uuid = 'updated-uid';
         policyConfig.inputs[0]!.config!.policy.value.meta.serverless = false;
-        policyConfig.inputs[0]!.config!.policy.value.meta.billable = false;
         const updatedPolicyConfig = await callback(
           policyConfig,
           soClient,
@@ -1371,47 +1349,6 @@ describe('Fleet integrations', () => {
       ).rejects.toThrow(
         "Invalid Elastic Defend security policy. 'inputs[0].config.policy.value' and 'inputs[0].config.artifact_manifest.value' are required."
       );
-    });
-
-    it('should correctly set meta.billable', async () => {
-      const isBillablePolicySpy = jest.spyOn(PolicyConfigHelpers, 'isBillablePolicy');
-
-      const soClient = savedObjectsClientMock.create();
-      const esClient = elasticsearchServiceMock.createClusterClient().asInternalUser;
-      licenseEmitter.next(Enterprise);
-
-      const callback = getPackagePolicyUpdateCallback(
-        endpointAppContextServiceMock,
-        cloudService,
-        productFeaturesService,
-        experimentalFeatures
-      );
-      const policyConfig = generator.generatePolicyPackagePolicy();
-
-      isBillablePolicySpy.mockReturnValue(false);
-      let updatedPolicyConfig = await callback(
-        policyConfig,
-        soClient,
-        esClient,
-        requestContextMock.convertContext(ctx),
-        req
-      );
-      expect(isBillablePolicySpy).toHaveBeenCalled();
-      expect(updatedPolicyConfig.inputs[0]!.config!.policy.value.meta.billable).toEqual(false);
-
-      isBillablePolicySpy.mockReset();
-      isBillablePolicySpy.mockReturnValue(true);
-      updatedPolicyConfig = await callback(
-        policyConfig,
-        soClient,
-        esClient,
-        requestContextMock.convertContext(ctx),
-        req
-      );
-      expect(isBillablePolicySpy).toHaveBeenCalled();
-      expect(updatedPolicyConfig.inputs[0]!.config!.policy.value.meta.billable).toEqual(true);
-
-      isBillablePolicySpy.mockRestore();
     });
 
     describe('device control notification validation', () => {
