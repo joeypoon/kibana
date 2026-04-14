@@ -13,7 +13,10 @@ import type { CreateWorkflowInsightRequestBody } from '../../../../common/api/en
 import { CreateWorkflowInsightRequestSchema } from '../../../../common/api/endpoint/workflow_insights/workflow_insights';
 import type { WorkflowInsightType } from '../../../../common/endpoint/types/workflow_insights';
 import { errorHandler } from '../error_handler';
-import { WORKFLOW_INSIGHTS_ROUTE } from '../../../../common/endpoint/constants';
+import {
+  WORKFLOW_INSIGHTS_ROUTE,
+  THREAT_HUNTING_AGENT_ID,
+} from '../../../../common/endpoint/constants';
 import { withEndpointAuthz } from '../with_endpoint_authz';
 import type {
   SecuritySolutionPluginRouter,
@@ -171,6 +174,7 @@ const createInsightsRouteHandler = (
               metadata,
               params: {
                 ...(connectorId ? { connectorId } : {}),
+                agentId: THREAT_HUNTING_AGENT_ID,
                 conversationId,
                 autoCreateConversationWithId: true,
                 nextInput: { message },

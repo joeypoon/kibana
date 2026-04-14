@@ -10,7 +10,10 @@ import { EMPTY } from 'rxjs';
 import { ExecutionStatus } from '@kbn/agent-builder-plugin/server';
 import { createMockEndpointAppContext, getRegisteredVersionedRouteMock } from '../../mocks';
 import { registerCreateInsightsRoute } from './create_insights';
-import { WORKFLOW_INSIGHTS_ROUTE } from '../../../../common/endpoint/constants';
+import {
+  WORKFLOW_INSIGHTS_ROUTE,
+  THREAT_HUNTING_AGENT_ID,
+} from '../../../../common/endpoint/constants';
 import type { EndpointAppContext } from '../../types';
 import type { SecuritySolutionPluginRouterMock } from '../../../mocks';
 import { AUTOMATIC_TROUBLESHOOTING_TAG } from '.';
@@ -192,6 +195,7 @@ describe('Create Insights Route Handler', () => {
             endpointId: 'endpoint-1',
           }),
           params: expect.objectContaining({
+            agentId: THREAT_HUNTING_AGENT_ID,
             autoCreateConversationWithId: true,
           }),
         })
