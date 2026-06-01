@@ -12,6 +12,8 @@ import type { Store, Action } from 'redux';
 import { Provider as ReduxStoreProvider } from 'react-redux';
 
 import { KibanaRenderContextProvider } from '@kbn/react-kibana-context-render';
+import type { ConversationAttachment } from '@kbn/agent-builder-common/attachments';
+import { AttachmentType } from '@kbn/agent-builder-common/attachments';
 import { useDarkMode } from '@kbn/kibana-react-plugin/public';
 import type { AppMountParameters } from '@kbn/core/public';
 
@@ -19,7 +21,7 @@ import { EuiThemeProvider } from '@kbn/kibana-react-plugin/common';
 import { CellActionsProvider } from '@kbn/cell-actions';
 import { NavigationProvider } from '@kbn/security-solution-navigation';
 import { EntityStoreEuidApiProvider, useInstallEntityStoreV2 } from '@kbn/entity-store/public';
-import { APP_NAME } from '../../common/constants';
+import { APP_NAME, ENDPOINTS_PATH } from '../../common/constants';
 import { UpsellingProvider } from '../common/components/upselling_provider';
 import { ManageUserInfo } from '../detections/components/user_info';
 import { ErrorToastDispatcher } from '../common/components/error_toast_dispatcher';
@@ -99,6 +101,41 @@ const StartAppComponent: FC<StartAppComponent> = ({ children, history, store, th
 
 const StartApp = memo(StartAppComponent);
 
+const endpointScreenContextAttachmentId = 'security-endpoint-screen-context';
+
+const getEndpointScreenContextAttachments = ({
+  pathname,
+  search,
+}: History['location']): ConversationAttachment[] => {
+  if (!pathname.startsWith(ENDPOINTS_PATH)) {
+    return [];
+  }
+
+  const searchParams = new URLSearchParams(search);
+  const selectedEndpointId = searchParams.get('selected_endpoint');
+  const selectedView = searchParams.get('show');
+
+  return [
+    {
+      id: endpointScreenContextAttachmentId,
+      type: AttachmentType.screenContext,
+      hidden: true,
+      data: {
+        app: 'securitySolution',
+        description:
+          'The user is viewing Elastic Defend endpoint management. For host health, unhealthy, degraded, policy response, protection artifact, or artifact snapshot questions about endpoint hosts, load the Elastic Defend automatic troubleshooting skill before general Observability skills.',
+        additional_data: {
+          product: 'Elastic Defend',
+          area: 'Endpoint management',
+          preferred_skill: 'automatic_troubleshooting',
+          ...(selectedEndpointId ? { endpoint_id: selectedEndpointId } : {}),
+          ...(selectedView ? { endpoint_view: selectedView } : {}),
+        },
+      },
+    },
+  ];
+};
+
 interface SecurityAppComponentProps {
   children: React.ReactNode;
   history: History;
@@ -122,15 +159,25 @@ const SecurityAppComponent: React.FC<SecurityAppComponentProps> = ({
   // Skip if the sidebar is already open (e.g. navigating from Agent Builder
   // with an active conversation) to avoid clobbering its props.
   useEffect(() => {
-    if (services.agentBuilder?.setChatConfig && !services.chrome.sidebar.isOpen()) {
-      services.agentBuilder.setChatConfig({
-        sessionTag: 'security',
-        newConversation: false,
-        agentId: readLastAgentBuilderAgentIdForSecuritySession(),
-      });
-    }
+    const setSecurityChatConfig = () => {
+      if (services.agentBuilder?.setChatConfig && !services.chrome.sidebar.isOpen()) {
+        const attachments = getEndpointScreenContextAttachments(history.location);
+
+        services.agentBuilder.setChatConfig({
+          sessionTag: 'security',
+          newConversation: false,
+          agentId: readLastAgentBuilderAgentIdForSecuritySession(),
+          ...(attachments.length > 0 ? { attachments } : {}),
+        });
+      }
+    };
+
+    setSecurityChatConfig();
+    const unlisten = history.listen(setSecurityChatConfig);
 
     return () => {
+      unlisten();
+
       if (consumePreserveAgentBuilderSessionGate()) {
         return;
       }
@@ -140,7 +187,7 @@ const SecurityAppComponent: React.FC<SecurityAppComponentProps> = ({
         services.agentBuilder.clearChatConfig();
       }
     };
-  }, [services.agentBuilder, services.chrome.sidebar, services.uiSettings]);
+  }, [history, services.agentBuilder, services.chrome.sidebar]);
 
   return (
     <KibanaContextProvider
