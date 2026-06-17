@@ -18,6 +18,7 @@ paths:
           description: The ID of the response action that generated the file.
           schema:
             type: string
+            maxLength: 128
         - name: file_id
           in: path
           required: true
@@ -28,6 +29,7 @@ paths:
             - For all other agent types: the `file_id` is the `agent_id` for which the response action was sent to.
           schema:
             type: string
+            maxLength: 128
       responses:
         '200':
           description: Indicates a successful call.

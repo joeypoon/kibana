@@ -19,6 +19,7 @@ import { EndpointArtifactExceptionValidationError } from './errors';
 import type { ExceptionItemLikeOptions } from '../types';
 
 import { isValidIPv4OrCIDR } from '../../../../common/endpoint/utils/is_valid_ip';
+import { MAX_HOST_ISOLATION_IP_VALUE_LENGTH } from '../../../../common/endpoint/schema/schema_bounds_constants';
 
 function validateIp(value: string) {
   if (!isValidIPv4OrCIDR(value)) {
@@ -31,6 +32,7 @@ const EntrySchema = schema.object({
   operator: schema.literal('included'),
   type: schema.literal('match'),
   value: schema.string({
+    maxLength: MAX_HOST_ISOLATION_IP_VALUE_LENGTH,
     validate: validateIp,
   }),
 });

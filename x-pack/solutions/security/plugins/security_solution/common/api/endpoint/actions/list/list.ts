@@ -14,6 +14,12 @@ import {
   RESPONSE_ACTION_TYPE,
 } from '../../../../endpoint/service/response_actions/constants';
 import { ENDPOINT_DEFAULT_PAGE_SIZE } from '../../../../endpoint/constants';
+import {
+  MAX_DATE_STRING_LENGTH,
+  MAX_ENDPOINT_IDS,
+  MAX_ID_LENGTH,
+  MAX_USERNAME_LENGTH,
+} from '../../../../endpoint/schema/schema_bounds_constants';
 import { agentTypesSchema } from '../common/base';
 
 const commandsSchema = schema.oneOf(
@@ -37,8 +43,11 @@ export const EndpointActionListRequestSchema = {
   query: schema.object({
     agentIds: schema.maybe(
       schema.oneOf([
-        schema.arrayOf(schema.string({ minLength: 1 }), { minSize: 1, maxSize: 250 }),
-        schema.string({ minLength: 1 }),
+        schema.arrayOf(schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }), {
+          minSize: 1,
+          maxSize: MAX_ENDPOINT_IDS,
+        }),
+        schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }),
       ])
     ),
     agentTypes: schema.maybe(
@@ -54,8 +63,8 @@ export const EndpointActionListRequestSchema = {
     pageSize: schema.maybe(
       schema.number({ defaultValue: ENDPOINT_DEFAULT_PAGE_SIZE, min: 1, max: 10000 })
     ),
-    startDate: schema.maybe(schema.string()), // date ISO strings or moment date
-    endDate: schema.maybe(schema.string()), // date ISO strings or moment date
+    startDate: schema.maybe(schema.string({ maxLength: MAX_DATE_STRING_LENGTH })),
+    endDate: schema.maybe(schema.string({ maxLength: MAX_DATE_STRING_LENGTH })),
     statuses: schema.maybe(
       schema.oneOf([
         schema.arrayOf(statusesSchema.schema, statusesSchema.options),
@@ -64,13 +73,16 @@ export const EndpointActionListRequestSchema = {
     ),
     userIds: schema.maybe(
       schema.oneOf([
-        schema.arrayOf(schema.string({ minLength: 1 }), { minSize: 1, maxSize: 50 }),
-        schema.string({ minLength: 1 }),
+        schema.arrayOf(schema.string({ minLength: 1, maxLength: MAX_USERNAME_LENGTH }), {
+          minSize: 1,
+          maxSize: 50,
+        }),
+        schema.string({ minLength: 1, maxLength: MAX_USERNAME_LENGTH }),
       ])
     ),
     withOutputs: schema.maybe(
       schema.oneOf([
-        schema.arrayOf(schema.string({ minLength: 1 }), {
+        schema.arrayOf(schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }), {
           minSize: 1,
           maxSize: 50,
           validate: (actionIds) => {
@@ -81,6 +93,7 @@ export const EndpointActionListRequestSchema = {
         }),
         schema.string({
           minLength: 1,
+          maxLength: MAX_ID_LENGTH,
           validate: (actionId) => {
             if (!actionId.trim().length) {
               return 'actionId cannot be an empty string';

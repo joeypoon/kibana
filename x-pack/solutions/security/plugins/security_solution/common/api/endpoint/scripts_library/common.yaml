@@ -14,6 +14,7 @@ components:
 
     EndpointScriptTags:
       type: string
+      maxLength: 32
       enum:
         - remediationAction
         - dataCollection
@@ -36,13 +37,16 @@ components:
           example: 123e4567-e89b-12d3-a456-426655440000
         name:
           type: string
+          maxLength: 256
           example: Collect host data
         platform:
           type: array
+          maxItems: 3
           items:
             $ref: '#/components/schemas/EndpointScriptPlatform'
         tags:
           type: array
+          maxItems: 50
           description: Tags that categorize the script
           items:
             $ref: '#/components/schemas/EndpointScriptTags'
@@ -66,15 +70,19 @@ components:
           example: /api/endpoint/scripts_library/123e4567-e89b-12d3-a456-426655440000/download
         description:
           type: string
+          maxLength: 10000
           description: Description of the script and its purpose/functionality
           example: Collects host data for investigation
         instructions:
           type: string
+          maxLength: 10000
           description: Instructions for using the script, including details around its supported input arguments
         example:
           type: string
+          maxLength: 10000
         pathToExecutable:
           type: string
+          maxLength: 4096
           description: >
             The relative path to the file included in the archive that should be executed once its contents
             are extracted. Applicable only for scripts uploaded as an archive (.zip file for example).
@@ -120,6 +128,7 @@ components:
 
     ArchivePathToExecutableSchema:
       type: string
+      maxLength: 4096
       description:
         Used only for when the uploaded script is an archive (.zip file for example).
         This property defines the relative path to the file included in the archive that should be executed

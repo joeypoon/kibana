@@ -19,7 +19,7 @@ import { z, lazySchema } from '@kbn/zod/v4';
 /**
  * A unique identifier
  */
-export const Id = lazySchema(() => z.string());
+export const Id = lazySchema(() => z.string().max(128));
 export type Id = z.infer<typeof Id>;
 
 export const IdOrUndefined = lazySchema(() => Id.nullable());
@@ -40,25 +40,25 @@ export type PageSize = z.infer<typeof PageSize>;
 /**
  * A start date in ISO 8601 format or Date Math format.
  */
-export const StartDate = lazySchema(() => z.string());
+export const StartDate = lazySchema(() => z.string().max(64));
 export type StartDate = z.infer<typeof StartDate>;
 
 /**
  * An end date in ISO format or Date Math format.
  */
-export const EndDate = lazySchema(() => z.string());
+export const EndDate = lazySchema(() => z.string().max(64));
 export type EndDate = z.infer<typeof EndDate>;
 
 /**
  * Agent ID
  */
-export const AgentId = lazySchema(() => z.string());
+export const AgentId = lazySchema(() => z.string().max(128));
 export type AgentId = z.infer<typeof AgentId>;
 
 /**
  * A KQL string.
  */
-export const Kuery = lazySchema(() => z.string());
+export const Kuery = lazySchema(() => z.string().max(10000));
 export type Kuery = z.infer<typeof Kuery>;
 
 /**
@@ -101,7 +101,7 @@ export const SortFieldEnum = SortField.enum;
  * A list of agent IDs. Max of 250.
  */
 export const AgentIds = lazySchema(() =>
-  z.union([z.array(z.string().min(1)).min(1).max(250), z.string().min(1)])
+  z.union([z.array(z.string().min(1).max(128)).min(1).max(250), z.string().min(1).max(128)])
 );
 export type AgentIds = z.infer<typeof AgentIds>;
 
@@ -158,7 +158,7 @@ export type Statuses = z.infer<typeof Statuses>;
  * A list of user IDs. Max of 50.
  */
 export const UserIds = lazySchema(() =>
-  z.union([z.array(z.string().min(1)).min(1).max(50), z.string().min(1)])
+  z.union([z.array(z.string().min(1).max(1024)).min(1).max(50), z.string().min(1).max(1024)])
 );
 export type UserIds = z.infer<typeof UserIds>;
 
@@ -166,7 +166,7 @@ export type UserIds = z.infer<typeof UserIds>;
  * A list of action IDs that should include the complete output of the action. Max of 50.
  */
 export const WithOutputs = lazySchema(() =>
-  z.union([z.array(z.string().min(1)).min(1).max(50), z.string().min(1)])
+  z.union([z.array(z.string().min(1).max(128)).min(1).max(50), z.string().min(1).max(128)])
 );
 export type WithOutputs = z.infer<typeof WithOutputs>;
 
@@ -187,13 +187,13 @@ export type Types = z.infer<typeof Types>;
 /**
  * List of endpoint IDs (cannot contain empty strings). Max of 250.
  */
-export const EndpointIds = lazySchema(() => z.array(z.string().min(1)).min(1).max(250));
+export const EndpointIds = lazySchema(() => z.array(z.string().min(1).max(128)).min(1).max(250));
 export type EndpointIds = z.infer<typeof EndpointIds>;
 
 /**
  * Optional comment
  */
-export const Comment = lazySchema(() => z.string());
+export const Comment = lazySchema(() => z.string().max(10000));
 export type Comment = z.infer<typeof Comment>;
 
 /**
@@ -218,11 +218,11 @@ export const BaseActionSchema = lazySchema(() =>
     /**
      * If this action is associated with any alerts, they can be specified here. The action will be logged in any cases associated with the specified alerts. Max of 50.
      */
-    alert_ids: z.array(z.string().min(1)).min(1).max(50).optional(),
+    alert_ids: z.array(z.string().min(1).max(128)).min(1).max(50).optional(),
     /**
      * The IDs of cases where the action taken will be logged. Max of 50.
      */
-    case_ids: z.array(z.string().min(1)).min(1).max(50).optional(),
+    case_ids: z.array(z.string().min(1).max(128)).min(1).max(50).optional(),
     comment: Comment.optional(),
     parameters: Parameters.optional(),
     agent_type: AgentTypes.optional(),
@@ -242,7 +242,7 @@ export const ProtectionUpdatesNoteResponse = lazySchema(() =>
     /**
      * A note associated with the protection updates for the given package policy.
      */
-    note: z.string().optional(),
+    note: z.string().max(10000).optional(),
   })
 );
 export type ProtectionUpdatesNoteResponse = z.infer<typeof ProtectionUpdatesNoteResponse>;
@@ -252,7 +252,7 @@ export const ResponseActionDetails = lazySchema(() =>
     /**
      * The response action ID
      */
-    id: z.string().uuid().optional(),
+    id: z.string().max(128).uuid().optional(),
     command: Command,
     agentType: AgentTypes.optional(),
     /**
@@ -270,23 +270,23 @@ export const ResponseActionDetails = lazySchema(() =>
     /**
      * The response action status
      */
-    status: z.string().optional(),
+    status: z.string().max(128).optional(),
     /**
      * The response action start time
      */
-    startedAt: z.string().datetime().optional(),
+    startedAt: z.string().max(64).datetime().optional(),
     /**
      * The response action completion time
      */
-    completedAt: z.string().datetime().optional(),
+    completedAt: z.string().max(64).datetime().optional(),
     /**
      * The user who created the response action
      */
-    createdBy: z.string().optional(),
+    createdBy: z.string().max(1024).optional(),
     /**
      * The agent IDs for the hosts that the response action was sent to
      */
-    agents: z.array(z.string().uuid()).optional(),
+    agents: z.array(z.string().max(128).uuid()).optional(),
     /**
      * The parameters of the response action. Content different depending on the response action command
      */
@@ -301,7 +301,7 @@ export const ResponseActionDetails = lazySchema(() =>
           /**
            * The host name
            */
-          name: z.string().optional(),
+          name: z.string().max(256).optional(),
         })
       )
       .optional(),
@@ -323,7 +323,7 @@ export const ResponseActionDetails = lazySchema(() =>
           /**
            * The date and time the response action was completed for the agent ID
            */
-          completedAt: z.string().optional(),
+          completedAt: z.string().max(64).optional(),
         })
       )
       .optional(),
@@ -340,7 +340,7 @@ response action command and will only be present for agents that have responded 
           /**
            * The response action output content for the agent ID. Exact format depends on the response action command.
            */
-          content: z.union([z.object({}), z.string()]),
+          content: z.union([z.object({}), z.string().max(100000)]),
         })
       )
       .optional(),

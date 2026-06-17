@@ -10,20 +10,48 @@ import { ToolResultType, ToolType } from '@kbn/agent-builder-common';
 import { z } from '@kbn/zod/v4';
 
 import { GENERATE_INSIGHT_TOOL_ID } from '../..';
+import {
+  MAX_GENERATE_INSIGHT_DATA_ITEMS,
+  MAX_GENERATE_INSIGHT_DATA_SERIALIZED_LENGTH,
+  MAX_ID_LENGTH,
+  MAX_INSIGHTS_ARRAY_SIZE,
+  MAX_LONG_TEXT_LENGTH,
+} from '../../../../../../common/endpoint/schema/schema_bounds_constants';
 import { createGenerateInsightGraph } from './graph';
 
-const generateInsightSchema = z.object({
-  problemDescription: z
-    .string()
-    .min(1)
-    .describe('A brief description of the original problem being diagnosed.'),
-  remediation: z.string().min(1).describe('A detailed guide for how to remediate the problem.'),
-  endpointIds: z.array(z.string()).min(1).describe('Related endpoint IDs'),
-  data: z
-    .array(z.object({}).catchall(z.unknown()))
-    .min(1)
-    .describe('Relevant raw unedited documents.'),
-});
+const generateInsightSchema = z
+  .object({
+    problemDescription: z
+      .string()
+      .min(1)
+      .max(MAX_LONG_TEXT_LENGTH)
+      .describe('A brief description of the original problem being diagnosed.'),
+    remediation: z
+      .string()
+      .min(1)
+      .max(MAX_LONG_TEXT_LENGTH)
+      .describe('A detailed guide for how to remediate the problem.'),
+    endpointIds: z
+      .array(z.string().min(1).max(MAX_ID_LENGTH))
+      .min(1)
+      .max(MAX_INSIGHTS_ARRAY_SIZE)
+      .describe('Related endpoint IDs'),
+    data: z
+      .array(z.object({}).catchall(z.unknown()))
+      .min(1)
+      .max(MAX_GENERATE_INSIGHT_DATA_ITEMS)
+      .describe('Relevant raw unedited documents.'),
+  })
+  .superRefine((value, ctx) => {
+    const serializedLength = JSON.stringify(value.data).length;
+    if (serializedLength > MAX_GENERATE_INSIGHT_DATA_SERIALIZED_LENGTH) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `data serialized payload exceeds maximum length of ${MAX_GENERATE_INSIGHT_DATA_SERIALIZED_LENGTH}`,
+        path: ['data'],
+      });
+    }
+  });
 
 export const generateInsightTool = (): BuiltinSkillBoundedTool<typeof generateInsightSchema> => {
   return {

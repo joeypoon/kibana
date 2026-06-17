@@ -6,9 +6,10 @@
  */
 
 import { schema } from '@kbn/config-schema';
+import { MAX_ID_LENGTH } from '../../../endpoint/schema/schema_bounds_constants';
 
 export const GetPolicyResponseSchema = {
   query: schema.object({
-    agentId: schema.string(),
+    agentId: schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }),
   }),
 };

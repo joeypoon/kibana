@@ -6,11 +6,16 @@
  */
 
 import { schema, type TypeOf } from '@kbn/config-schema';
+import { MAX_ID_LENGTH } from '../../../endpoint/schema/schema_bounds_constants';
 import { validateNonEmptyString } from '../schema_utils';
 
 export const DownloadScriptRequestSchema = {
   params: schema.object({
-    script_id: schema.string({ validate: validateNonEmptyString }),
+    script_id: schema.string({
+      minLength: 1,
+      maxLength: MAX_ID_LENGTH,
+      validate: validateNonEmptyString,
+    }),
   }),
 };
 

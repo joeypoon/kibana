@@ -12,37 +12,71 @@ components:
         - .osquery
         - .endpoint
 
+    ResponseActionComment:
+      type: string
+      description: Optional comment explaining the response action.
+      maxLength: 10000
+
+    OsqueryQueryText:
+      type: string
+      description: Osquery SQL query text.
+      maxLength: 10000
+
+    OsqueryQueryId:
+      type: string
+      description: Query ID.
+      maxLength: 128
+
+    OsqueryVersionOrPlatform:
+      type: string
+      maxLength: 64
+
+    OsquerySavedObjectId:
+      type: string
+      description: Saved object identifier (pack or saved query).
+      maxLength: 256
+
+    EcsMappingValueString:
+      type: string
+      maxLength: 1024
+
+    EcsMappingValue:
+      oneOf:
+        - $ref: '#/components/schemas/EcsMappingValueString'
+        - type: array
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/EcsMappingValueString'
+
+    EcsMappingItem:
+      type: object
+      properties:
+        field:
+          type: string
+          maxLength: 256
+        value:
+          $ref: '#/components/schemas/EcsMappingValue'
+
     EcsMapping:
       type: object
       description: 'Map Osquery results columns or static values to Elastic Common Schema (ECS) fields. Example: "ecs_mapping": {"process.pid": {"field": "pid"}}'
+      maxProperties: 1000
       additionalProperties:
-        type: object
-        properties:
-          field:
-            type: string
-          value:
-            oneOf:
-              - type: string
-              - type: array
-                items:
-                  type: string
+        $ref: '#/components/schemas/EcsMappingItem'
 
     OsqueryQuery:
       type: object
       properties:
         id:
-          type: string
-          description: Query ID
+          $ref: '#/components/schemas/OsqueryQueryId'
         query:
-          type: string
-          description: Query to run
+          $ref: '#/components/schemas/OsqueryQueryText'
         ecs_mapping:
           $ref: '#/components/schemas/EcsMapping'
         version:
-          type: string
-          description: Query version
+          $ref: '#/components/schemas/OsqueryVersionOrPlatform'
         platform:
-          type: string
+          $ref: '#/components/schemas/OsqueryVersionOrPlatform'
         removed:
           type: boolean
         snapshot:
@@ -55,19 +89,20 @@ components:
       type: object
       properties:
         query:
-          type: string
+          $ref: '#/components/schemas/OsqueryQueryText'
           description: 'To run a single query, use the query field and enter a SQL query. Example: "query": "SELECT * FROM processes;"'
         ecs_mapping:
           $ref: '#/components/schemas/EcsMapping'
         queries:
           type: array
+          maxItems: 1000
           items:
             $ref: '#/components/schemas/OsqueryQuery'
         pack_id:
-          type: string
+          $ref: '#/components/schemas/OsquerySavedObjectId'
           description: 'To specify a query pack, use the packId field. Example: "packId": "processes_elastic"'
         saved_query_id:
-          type: string
+          $ref: '#/components/schemas/OsquerySavedObjectId'
           description: 'To run a saved query, use the saved_query_id field and specify the saved query ID. Example: "saved_query_id": "processes_elastic"'
         timeout:
           type: number
@@ -77,17 +112,18 @@ components:
       type: object
       properties:
         query:
-          type: string
+          $ref: '#/components/schemas/OsqueryQueryText'
         ecsMapping:
           $ref: '#/components/schemas/EcsMapping'
         queries:
           type: array
+          maxItems: 1000
           items:
             $ref: '#/components/schemas/OsqueryQuery'
         packId:
-          type: string
+          $ref: '#/components/schemas/OsquerySavedObjectId'
         savedQueryId:
-          type: string
+          $ref: '#/components/schemas/OsquerySavedObjectId'
         timeout:
           type: number
 
@@ -126,7 +162,7 @@ components:
           enum:
             - isolate
         comment:
-          type: string
+          $ref: '#/components/schemas/ResponseActionComment'
       required:
         - command
 
@@ -137,14 +173,15 @@ components:
         scriptId:
           type: string
           description: The ID of the script to run (from the Kibana Script library)
+          maxLength: 128
         scriptInput:
           type: string
           description: The arguments to pass to the script (if any)
+          maxLength: 4096
         timeout:
           type: integer
           description: Specify the timeout in seconds for the script execution
           example: 60
-
 
     RunscriptParams:
       type: object
@@ -157,7 +194,7 @@ components:
           enum:
             - runscript
         comment:
-          type: string
+          $ref: '#/components/schemas/ResponseActionComment'
           description: Add a note that explains or describes the action. You can find your comment in the response actions history log
         config:
           type: object
@@ -169,6 +206,11 @@ components:
             windows:
               $ref: '#/components/schemas/RunScriptOsConfigValues'
 
+    EndpointProcessConfigField:
+      type: string
+      description: Field to use instead of process.pid
+      maxLength: 256
+
     ProcessesParams:
       type: object
       properties:
@@ -179,7 +221,7 @@ components:
             - suspend-process
           description: 'To run an endpoint response action, specify a value for the command field. Example: "command": "isolate"'
         comment:
-          type: string
+          $ref: '#/components/schemas/ResponseActionComment'
           description: 'Add a note that explains or describes the action. You can find your comment in the response actions history log. Example: "comment": "Check processes"'
         config:
           required:
@@ -187,8 +229,7 @@ components:
           type: object
           properties:
             field:
-              type: string
-              description: Field to use instead of process.pid
+              $ref: '#/components/schemas/EndpointProcessConfigField'
             overwrite:
               type: boolean
               description: Whether to overwrite field with process.pid
@@ -239,6 +280,7 @@ components:
       oneOf:
         - $ref: '#/components/schemas/OsqueryResponseAction'
         - $ref: '#/components/schemas/EndpointResponseAction'
+
 
     # Camel Cased versions of ResponseAction
     RuleResponseAction:

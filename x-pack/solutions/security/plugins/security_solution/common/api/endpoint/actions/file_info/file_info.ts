@@ -7,12 +7,13 @@
 
 import type { TypeOf } from '@kbn/config-schema';
 import { schema } from '@kbn/config-schema';
+import { MAX_ID_LENGTH } from '../../../../endpoint/schema/schema_bounds_constants';
 
 /** Schema that validates the file info API */
 export const EndpointActionFileInfoSchema = {
   params: schema.object({
-    action_id: schema.string({ minLength: 1 }),
-    file_id: schema.string({ minLength: 1 }),
+    action_id: schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }),
+    file_id: schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }),
   }),
 };
 

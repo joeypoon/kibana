@@ -7,6 +7,7 @@
 
 import type { TypeOf } from '@kbn/config-schema';
 import { schema } from '@kbn/config-schema';
+import { MAX_EXECUTE_COMMAND_LENGTH } from '../../../../../endpoint/schema/schema_bounds_constants';
 import { BaseActionRequestSchema } from '../../common/base';
 
 export const ExecuteActionRequestSchema = {
@@ -15,6 +16,7 @@ export const ExecuteActionRequestSchema = {
     parameters: schema.object({
       command: schema.string({
         minLength: 1,
+        maxLength: MAX_EXECUTE_COMMAND_LENGTH,
         validate: (value) => {
           if (!value.trim().length) {
             return 'command cannot be an empty string';

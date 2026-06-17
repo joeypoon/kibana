@@ -20,7 +20,13 @@ import { SuccessResponse } from '../model/schema/common.gen';
 
 export const GetEndpointSuggestionsRequestParams = lazySchema(() =>
   z.object({
-    suggestion_type: z.literal('eventFilters'),
+    suggestion_type: z.enum([
+      'eventFilters',
+      'endpoints',
+      'endpointExceptions',
+      'trustedApps',
+      'trustedDevices',
+    ]),
   })
 );
 export type GetEndpointSuggestionsRequestParams = z.infer<
@@ -32,10 +38,25 @@ export type GetEndpointSuggestionsRequestParamsInput = z.input<
 
 export const GetEndpointSuggestionsRequestBody = lazySchema(() =>
   z.object({
-    field: z.string().optional(),
-    query: z.string().optional(),
-    filters: z.array(z.object({})).max(50).optional(),
-    fieldMeta: z.unknown(),
+    /**
+     * ECS field path for autocomplete suggestions.
+     */
+    field: z.string().max(256),
+    /**
+     * Autocomplete prefix query string.
+     */
+    query: z.string().max(1024),
+    /**
+     * Elasticsearch filter clauses. Runtime validation in get_suggestions.ts enforces key count, array item count, and string lengths; the generated schema only bounds top-level array size.
+     */
+    filters: z.array(z.object({}).catchall(z.unknown())).max(50).optional(),
+    /**
+     * Field metadata map. Runtime validation in get_suggestions.ts enforces a maximum of 50 keys and per-key string lengths; the generated schema only bounds value types.
+     */
+    fieldMeta: z
+      .object({})
+      .catchall(z.union([z.string().max(10000), z.number(), z.boolean()]))
+      .optional(),
   })
 );
 export type GetEndpointSuggestionsRequestBody = z.infer<typeof GetEndpointSuggestionsRequestBody>;

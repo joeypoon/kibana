@@ -6,7 +6,12 @@
  */
 
 import type { ObjectType } from '@kbn/config-schema';
-import { packSavedObjectModelVersion3 } from './saved_object_model_versions';
+import { MAX_ECS_MAPPING_RESPONSE_KEYS } from './config_schema_bounds';
+import {
+  packSavedObjectModelVersion2,
+  packSavedObjectModelVersion3,
+  savedQueryModelVersion2,
+} from './saved_object_model_versions';
 
 describe('Pack saved object model version 3 forward compatibility', () => {
   const forwardCompatibility = packSavedObjectModelVersion3.schemas?.forwardCompatibility;
@@ -155,5 +160,107 @@ describe('Pack saved object model version 3 forward compatibility', () => {
     };
 
     expect(() => (forwardCompatibility as ObjectType).validate(syntheticV4Doc)).not.toThrow();
+  });
+});
+
+describe('Saved query saved object model version 2 forward compatibility', () => {
+  const forwardCompatibility = savedQueryModelVersion2.schemas?.forwardCompatibility;
+
+  it('exposes a forwardCompatibility schema', () => {
+    expect(forwardCompatibility).toBeDefined();
+  });
+
+  it('accepts on-disk canonical ecs_mapping array form at the 1000-item boundary', () => {
+    const ecsMappingArray = Array.from({ length: MAX_ECS_MAPPING_RESPONSE_KEYS }, (_, index) => ({
+      key: `field_${index}`,
+      value: { value: 'static' },
+    }));
+
+    expect(() =>
+      (forwardCompatibility as ObjectType).validate({
+        id: 'sq1',
+        query: 'select 1;',
+        ecs_mapping: ecsMappingArray,
+      })
+    ).not.toThrow();
+  });
+});
+
+describe('Pack saved object model version 2 forward compatibility', () => {
+  const forwardCompatibility = packSavedObjectModelVersion2.schemas?.forwardCompatibility;
+
+  it('exposes a forwardCompatibility schema', () => {
+    expect(forwardCompatibility).toBeDefined();
+  });
+
+  it('accepts a V2 pack SO document', () => {
+    const v2Doc = {
+      name: 'test-pack',
+      enabled: true,
+      created_at: '2026-05-01T00:00:00.000Z',
+      created_by: 'elastic',
+      updated_at: '2026-05-01T00:00:00.000Z',
+      updated_by: 'elastic',
+      queries: [
+        {
+          id: 'q1',
+          query: 'SELECT * FROM users;',
+        },
+      ],
+    };
+
+    expect(() => (forwardCompatibility as ObjectType).validate(v2Doc)).not.toThrow();
+  });
+});
+
+describe('Saved query saved object model version 2 create schema', () => {
+  const createSchema = savedQueryModelVersion2.schemas?.create;
+
+  it('exposes a create schema', () => {
+    expect(createSchema).toBeDefined();
+  });
+
+  it('accepts a saved query SO with bounded ecs_mapping at create time', () => {
+    const ecsMappingArray = Array.from({ length: MAX_ECS_MAPPING_RESPONSE_KEYS }, (_, index) => ({
+      key: `field_${index}`,
+      value: { value: 'static' },
+    }));
+
+    expect(() =>
+      (createSchema as ObjectType).validate({
+        id: 'sq1',
+        query: 'select 1;',
+        ecs_mapping: ecsMappingArray,
+      })
+    ).not.toThrow();
+  });
+
+  it('rejects ecs_mapping above the upper bound on create', () => {
+    const ecsMappingRecord = Object.fromEntries(
+      Array.from({ length: MAX_ECS_MAPPING_RESPONSE_KEYS + 1 }, (_, index) => [
+        `field_${index}`,
+        { value: 'static' },
+      ])
+    );
+
+    expect(() =>
+      (createSchema as ObjectType).validate({
+        id: 'sq1',
+        query: 'select 1;',
+        ecs_mapping: ecsMappingRecord,
+      })
+    ).toThrow(/must not exceed 1000 keys/);
+  });
+
+  it('accepts legacy snapshot/removed/prebuilt slots via unknowns allow', () => {
+    expect(() =>
+      (createSchema as ObjectType).validate({
+        id: 'sq1',
+        query: 'select 1;',
+        snapshot: true,
+        removed: false,
+        prebuilt: true,
+      })
+    ).not.toThrow();
   });
 });

@@ -6,6 +6,14 @@
  */
 
 import { schema } from '@kbn/config-schema';
+import {
+  MAX_DATE_STRING_LENGTH,
+  MAX_FIELD_NAME_LENGTH,
+  MAX_FILTER_STRING_LENGTH,
+  MAX_ID_LENGTH,
+  MAX_INDEX_PATTERN_LENGTH,
+  MAX_RESOLVER_ENTITY_ID_LENGTH,
+} from './schema_bounds_constants';
 
 /**
  * Used to validate GET requests for a complete resolver tree.
@@ -26,28 +34,39 @@ export const validateTree = {
     ancestors: schema.number({ defaultValue: 200, min: 0, max: 10000 }),
     timeRange: schema.maybe(
       schema.object({
-        from: schema.string(),
-        to: schema.string(),
+        from: schema.string({ maxLength: MAX_DATE_STRING_LENGTH }),
+        to: schema.string({ maxLength: MAX_DATE_STRING_LENGTH }),
       })
     ),
-    agentId: schema.maybe(schema.string()),
+    agentId: schema.maybe(schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH })),
     schema: schema.object({
       // the ancestry field is optional
-      ancestry: schema.maybe(schema.string({ minLength: 1 })),
+      ancestry: schema.maybe(
+        schema.string({ minLength: 1, maxLength: MAX_RESOLVER_ENTITY_ID_LENGTH })
+      ),
       // the agentId field is introduced because agent.id will stop being included in entity_id
-      agentId: schema.maybe(schema.string()),
-      id: schema.string({ minLength: 1 }),
-      name: schema.maybe(schema.string({ minLength: 1 })),
-      parent: schema.string({ minLength: 1 }),
+      agentId: schema.maybe(schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH })),
+      id: schema.string({ minLength: 1, maxLength: MAX_RESOLVER_ENTITY_ID_LENGTH }),
+      name: schema.maybe(schema.string({ minLength: 1, maxLength: MAX_FIELD_NAME_LENGTH })),
+      parent: schema.string({ minLength: 1, maxLength: MAX_RESOLVER_ENTITY_ID_LENGTH }),
     }),
     // only allowing strings and numbers for node IDs because Elasticsearch only allows those types for collapsing:
     // https://www.elastic.co/guide/en/elasticsearch/reference/current/collapse-search-results.html
     // We use collapsing in our Elasticsearch queries for the tree api
-    nodes: schema.arrayOf(schema.oneOf([schema.string({ minLength: 1 }), schema.number()]), {
+    nodes: schema.arrayOf(
+      schema.oneOf([
+        schema.string({ minLength: 1, maxLength: MAX_RESOLVER_ENTITY_ID_LENGTH }),
+        schema.number(),
+      ]),
+      {
+        minSize: 1,
+        maxSize: 65536,
+      }
+    ),
+    indexPatterns: schema.arrayOf(schema.string({ maxLength: MAX_INDEX_PATTERN_LENGTH }), {
       minSize: 1,
-      maxSize: 65536,
+      maxSize: 100,
     }),
-    indexPatterns: schema.arrayOf(schema.string(), { minSize: 1, maxSize: 100 }),
     includeHits: schema.boolean({ defaultValue: false }),
   }),
 };
@@ -59,20 +78,26 @@ export const validateEvents = {
   query: schema.object({
     // keeping the max as 10k because the limit in ES for a single query is also 10k
     limit: schema.number({ defaultValue: 1000, min: 1, max: 10000 }),
-    afterEvent: schema.maybe(schema.string()),
+    afterEvent: schema.maybe(
+      schema.string({ minLength: 1, maxLength: MAX_RESOLVER_ENTITY_ID_LENGTH })
+    ),
   }),
   body: schema.object({
     timeRange: schema.maybe(
       schema.object({
-        from: schema.string(),
-        to: schema.string(),
+        from: schema.string({ maxLength: MAX_DATE_STRING_LENGTH }),
+        to: schema.string({ maxLength: MAX_DATE_STRING_LENGTH }),
       })
     ),
-    indexPatterns: schema.arrayOf(schema.string(), { maxSize: 100 }),
-    filter: schema.maybe(schema.string()),
-    entityType: schema.maybe(schema.string()),
-    eventID: schema.maybe(schema.string()),
-    agentId: schema.maybe(schema.string()),
+    indexPatterns: schema.arrayOf(schema.string({ maxLength: MAX_INDEX_PATTERN_LENGTH }), {
+      maxSize: 100,
+    }),
+    filter: schema.maybe(schema.string({ maxLength: MAX_FILTER_STRING_LENGTH })),
+    entityType: schema.maybe(schema.string({ minLength: 1, maxLength: MAX_FIELD_NAME_LENGTH })),
+    eventID: schema.maybe(
+      schema.string({ minLength: 1, maxLength: MAX_RESOLVER_ENTITY_ID_LENGTH })
+    ),
+    agentId: schema.maybe(schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH })),
   }),
 };
 
@@ -84,10 +109,13 @@ export const validateEntities = {
     /**
      * Return the process entities related to the document w/ the matching `_id`.
      */
-    _id: schema.string(),
+    _id: schema.string({ minLength: 1, maxLength: MAX_RESOLVER_ENTITY_ID_LENGTH }),
     /**
      * Indices to search in.
      */
-    indices: schema.oneOf([schema.arrayOf(schema.string(), { maxSize: 100 }), schema.string()]),
+    indices: schema.oneOf([
+      schema.arrayOf(schema.string({ maxLength: MAX_INDEX_PATTERN_LENGTH }), { maxSize: 100 }),
+      schema.string({ maxLength: MAX_INDEX_PATTERN_LENGTH }),
+    ]),
   }),
 };

@@ -31,6 +31,13 @@ export const savedQueryModelVersion2: SavedObjectsModelVersion = {
   ],
   schemas: {
     forwardCompatibility: savedQuerySchemaV2.extends({}, { unknowns: 'ignore' }),
+    // `create` is required for new model versions per #240919 (rollback support
+    // soft-enforced 2025-11-05). The saved-query SO root is `dynamic: false`, so
+    // the SO-types lint requires every mapping field be declared here. Reuse
+    // `savedQuerySchemaV2` (which already declares V1+V2 fields and bounded
+    // `ecs_mapping`) and accept unknown sub-keys so legacy attribute slots such
+    // as `snapshot` / `removed` / `prebuilt` round-trip on copy/import.
+    create: savedQuerySchemaV2.extends({}, { unknowns: 'allow' }),
   },
 };
 

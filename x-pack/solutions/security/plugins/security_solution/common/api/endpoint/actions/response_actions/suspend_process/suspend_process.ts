@@ -7,6 +7,7 @@
 
 import type { TypeOf } from '@kbn/config-schema';
 import { schema } from '@kbn/config-schema';
+import { MAX_PROCESS_FIELD_LENGTH } from '../../../../../endpoint/schema/schema_bounds_constants';
 import { BaseActionRequestSchema } from '../../common/base';
 
 export const SuspendProcessRouteRequestSchema = {
@@ -14,7 +15,9 @@ export const SuspendProcessRouteRequestSchema = {
     ...BaseActionRequestSchema,
     parameters: schema.oneOf([
       schema.object({ pid: schema.number({ min: 1 }) }),
-      schema.object({ entity_id: schema.string({ minLength: 1 }) }),
+      schema.object({
+        entity_id: schema.string({ minLength: 1, maxLength: MAX_PROCESS_FIELD_LENGTH }),
+      }),
     ]),
   }),
 };

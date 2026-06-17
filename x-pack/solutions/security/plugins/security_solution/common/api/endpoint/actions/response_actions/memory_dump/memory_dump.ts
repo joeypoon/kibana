@@ -7,6 +7,7 @@
 
 import { schema, type TypeOf } from '@kbn/config-schema';
 import type { DeepMutable } from '../../../../../endpoint/types';
+import { MAX_PROCESS_FIELD_LENGTH } from '../../../../../endpoint/schema/schema_bounds_constants';
 import { BaseActionRequestSchema } from '../../..';
 
 export const MemoryDumpActionRequestSchema = {
@@ -19,6 +20,7 @@ export const MemoryDumpActionRequestSchema = {
         entity_id: schema.maybe(
           schema.string({
             minLength: 1,
+            maxLength: MAX_PROCESS_FIELD_LENGTH,
             validate: (value) => {
               if (!value.trim().length) {
                 return `entity_id cannot be an empty string`;

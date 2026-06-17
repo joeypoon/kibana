@@ -15,6 +15,11 @@ import {
 import { createHapiReadableStreamMock } from '../../../server/endpoint/services/actions/mocks';
 import type { HapiReadableStream } from '../../../server/types';
 import {
+  ActionDetailsRequestSchema,
+  ActionStatusRequestSchema,
+  EndpointActionFileDownloadSchema,
+  EndpointActionFileInfoSchema,
+  EndpointActionLogRequestSchema,
   EndpointActionListRequestSchema,
   KillProcessRouteRequestSchema,
   SuspendProcessRouteRequestSchema,
@@ -25,6 +30,15 @@ import {
   RunScriptActionRequestSchema,
   CancelActionRequestSchema,
 } from '../../api/endpoint';
+import {
+  AutomatedActionListRequestSchema,
+  AutomatedActionResponseRequestSchema,
+} from './automated_actions';
+import {
+  MAX_DATE_STRING_LENGTH,
+  MAX_ID_LENGTH,
+  MAX_USERNAME_LENGTH,
+} from './schema_bounds_constants';
 import type { MemoryDumpActionRequestBody } from '../../api/endpoint/actions/response_actions/memory_dump';
 import { MemoryDumpActionRequestSchema } from '../../api/endpoint/actions/response_actions/memory_dump';
 import { isActionSupportedByAgentType } from '../service/response_actions/is_response_action_supported';
@@ -485,6 +499,259 @@ describe('actions schemas', () => {
         }).toThrow();
       });
     });
+
+    describe('string length bounds', () => {
+      const maxId = 'a'.repeat(MAX_ID_LENGTH);
+      const overMaxId = 'a'.repeat(MAX_ID_LENGTH + 1);
+      const maxUsername = 'u'.repeat(MAX_USERNAME_LENGTH);
+      const overMaxUsername = 'u'.repeat(MAX_USERNAME_LENGTH + 1);
+      const maxDate = 'd'.repeat(MAX_DATE_STRING_LENGTH);
+      const overMaxDate = 'd'.repeat(MAX_DATE_STRING_LENGTH + 1);
+
+      it.each(['agentIds', 'withOutputs'] as const)('should accept %s at max length', (field) => {
+        expect(() => {
+          EndpointActionListRequestSchema.query.validate({ [field]: maxId });
+        }).not.toThrow();
+      });
+
+      it.each(['agentIds', 'withOutputs'] as const)('should reject %s over max length', (field) => {
+        expect(() => {
+          EndpointActionListRequestSchema.query.validate({ [field]: overMaxId });
+        }).toThrow();
+      });
+
+      it('should accept userIds at max length', () => {
+        expect(() => {
+          EndpointActionListRequestSchema.query.validate({ userIds: maxUsername });
+        }).not.toThrow();
+      });
+
+      it('should reject userIds over max length', () => {
+        expect(() => {
+          EndpointActionListRequestSchema.query.validate({ userIds: overMaxUsername });
+        }).toThrow();
+      });
+
+      it.each(['startDate', 'endDate'] as const)('should accept %s at max length', (field) => {
+        expect(() => {
+          EndpointActionListRequestSchema.query.validate({ [field]: maxDate });
+        }).not.toThrow();
+      });
+
+      it.each(['startDate', 'endDate'] as const)('should reject %s over max length', (field) => {
+        expect(() => {
+          EndpointActionListRequestSchema.query.validate({ [field]: overMaxDate });
+        }).toThrow();
+      });
+    });
+  });
+
+  describe('ActionStatusRequestSchema', () => {
+    const maxId = 'a'.repeat(MAX_ID_LENGTH);
+    const overMaxId = 'a'.repeat(MAX_ID_LENGTH + 1);
+
+    it('should accept agent_ids at max length', () => {
+      expect(() => {
+        ActionStatusRequestSchema.query.validate({ agent_ids: maxId });
+      }).not.toThrow();
+    });
+
+    it('should reject agent_ids over max length', () => {
+      expect(() => {
+        ActionStatusRequestSchema.query.validate({ agent_ids: overMaxId });
+      }).toThrow();
+    });
+  });
+
+  describe('ActionDetailsRequestSchema', () => {
+    const maxId = 'a'.repeat(MAX_ID_LENGTH);
+    const overMaxId = 'a'.repeat(MAX_ID_LENGTH + 1);
+
+    it('should accept action_id at max length', () => {
+      expect(() => {
+        ActionDetailsRequestSchema.params.validate({ action_id: maxId });
+      }).not.toThrow();
+    });
+
+    it('should accept empty action_id', () => {
+      expect(() => {
+        ActionDetailsRequestSchema.params.validate({ action_id: '' });
+      }).not.toThrow();
+    });
+
+    it('should reject action_id over max length', () => {
+      expect(() => {
+        ActionDetailsRequestSchema.params.validate({ action_id: overMaxId });
+      }).toThrow();
+    });
+  });
+
+  describe.each`
+    name                                  | schema
+    ${'EndpointActionFileDownloadSchema'} | ${EndpointActionFileDownloadSchema}
+    ${'EndpointActionFileInfoSchema'}     | ${EndpointActionFileInfoSchema}
+  `('$name', ({ schema: fileSchema }) => {
+    const maxId = 'a'.repeat(MAX_ID_LENGTH);
+    const overMaxId = 'a'.repeat(MAX_ID_LENGTH + 1);
+
+    it.each(['action_id', 'file_id'] as const)('should accept %s at max length', (field) => {
+      expect(() => {
+        fileSchema.params.validate({ action_id: 'action-id', file_id: 'file-id', [field]: maxId });
+      }).not.toThrow();
+    });
+
+    it.each(['action_id', 'file_id'] as const)('should reject %s over max length', (field) => {
+      expect(() => {
+        fileSchema.params.validate({
+          action_id: 'action-id',
+          file_id: 'file-id',
+          [field]: overMaxId,
+        });
+      }).toThrow();
+    });
+  });
+
+  describe('EndpointActionLogRequestSchema', () => {
+    const maxId = 'a'.repeat(MAX_ID_LENGTH);
+    const overMaxId = 'a'.repeat(MAX_ID_LENGTH + 1);
+    const maxDate = 'd'.repeat(MAX_DATE_STRING_LENGTH);
+    const overMaxDate = 'd'.repeat(MAX_DATE_STRING_LENGTH + 1);
+
+    it('should accept agent_id at max length', () => {
+      expect(() => {
+        EndpointActionLogRequestSchema.params.validate({ agent_id: maxId });
+      }).not.toThrow();
+    });
+
+    it('should reject agent_id over max length', () => {
+      expect(() => {
+        EndpointActionLogRequestSchema.params.validate({ agent_id: overMaxId });
+      }).toThrow();
+    });
+
+    it.each(['start_date', 'end_date'] as const)('should accept %s at max length', (field) => {
+      expect(() => {
+        EndpointActionLogRequestSchema.query.validate({
+          start_date: '2024-01-01',
+          end_date: '2024-01-02',
+          [field]: maxDate,
+        });
+      }).not.toThrow();
+    });
+
+    it.each(['start_date', 'end_date'] as const)('should reject %s over max length', (field) => {
+      expect(() => {
+        EndpointActionLogRequestSchema.query.validate({
+          start_date: '2024-01-01',
+          end_date: '2024-01-02',
+          [field]: overMaxDate,
+        });
+      }).toThrow();
+    });
+  });
+
+  describe('AutomatedActionListRequestSchema', () => {
+    const maxId = 'a'.repeat(MAX_ID_LENGTH);
+    const overMaxId = 'a'.repeat(MAX_ID_LENGTH + 1);
+
+    it('should accept alertIds at max length', () => {
+      expect(() => {
+        AutomatedActionListRequestSchema.query.validate({ alertIds: [maxId] });
+      }).not.toThrow();
+    });
+
+    it('should reject alertIds over max length', () => {
+      expect(() => {
+        AutomatedActionListRequestSchema.query.validate({ alertIds: [overMaxId] });
+      }).toThrow();
+    });
+  });
+
+  describe('AutomatedActionResponseRequestSchema', () => {
+    const maxId = 'a'.repeat(MAX_ID_LENGTH);
+    const overMaxId = 'a'.repeat(MAX_ID_LENGTH + 1);
+    const maxDate = 'd'.repeat(MAX_DATE_STRING_LENGTH);
+    const overMaxDate = 'd'.repeat(MAX_DATE_STRING_LENGTH + 1);
+
+    it('should accept expiration at max length', () => {
+      expect(() => {
+        AutomatedActionResponseRequestSchema.query.validate({
+          expiration: maxDate,
+          actionId: 'action-id',
+          agent: { id: 'agent-id' },
+        });
+      }).not.toThrow();
+    });
+
+    it('should reject expiration over max length', () => {
+      expect(() => {
+        AutomatedActionResponseRequestSchema.query.validate({
+          expiration: overMaxDate,
+          actionId: 'action-id',
+          agent: { id: 'agent-id' },
+        });
+      }).toThrow();
+    });
+
+    it('should accept actionId at max length', () => {
+      expect(() => {
+        AutomatedActionResponseRequestSchema.query.validate({
+          expiration: '2024-01-01',
+          actionId: maxId,
+          agent: { id: 'agent-id' },
+        });
+      }).not.toThrow();
+    });
+
+    it('should reject actionId over max length', () => {
+      expect(() => {
+        AutomatedActionResponseRequestSchema.query.validate({
+          expiration: '2024-01-01',
+          actionId: overMaxId,
+          agent: { id: 'agent-id' },
+        });
+      }).toThrow();
+    });
+
+    it('should accept agent.id string at max length', () => {
+      expect(() => {
+        AutomatedActionResponseRequestSchema.query.validate({
+          expiration: '2024-01-01',
+          actionId: 'action-id',
+          agent: { id: maxId },
+        });
+      }).not.toThrow();
+    });
+
+    it('should reject agent.id string over max length', () => {
+      expect(() => {
+        AutomatedActionResponseRequestSchema.query.validate({
+          expiration: '2024-01-01',
+          actionId: 'action-id',
+          agent: { id: overMaxId },
+        });
+      }).toThrow();
+    });
+
+    it('should accept agent.id array item at max length', () => {
+      expect(() => {
+        AutomatedActionResponseRequestSchema.query.validate({
+          expiration: '2024-01-01',
+          actionId: 'action-id',
+          agent: { id: [maxId] },
+        });
+      }).not.toThrow();
+    });
+
+    it('should reject agent.id array item over max length', () => {
+      expect(() => {
+        AutomatedActionResponseRequestSchema.query.validate({
+          expiration: '2024-01-01',
+          actionId: 'action-id',
+          agent: { id: [overMaxId] },
+        });
+      }).toThrow();
+    });
   });
 
   describe('NoParametersRequestSchema', () => {
@@ -609,6 +876,23 @@ describe('actions schemas', () => {
           case_ids: Array(51)
             .fill(1)
             .map(() => uuidv4()),
+        });
+      }).toThrow();
+    });
+
+    it('should reject endpoint id longer than max length', () => {
+      expect(() => {
+        NoParametersRequestSchema.body.validate({
+          endpoint_ids: ['x'.repeat(129)],
+        });
+      }).toThrow();
+    });
+
+    it('should reject comment longer than max length', () => {
+      expect(() => {
+        NoParametersRequestSchema.body.validate({
+          endpoint_ids: ['ABC-XYZ-000'],
+          comment: 'x'.repeat(10_001),
         });
       }).toThrow();
     });
@@ -1125,6 +1409,17 @@ describe('actions schemas', () => {
             ...validMdeBase,
             parameters: {
               scriptName: '',
+            },
+          });
+        }).toThrow();
+      });
+
+      it('should reject scriptName over the limit', () => {
+        expect(() => {
+          RunScriptActionRequestSchema.body.validate({
+            ...validMdeBase,
+            parameters: {
+              scriptName: 'a'.repeat(129),
             },
           });
         }).toThrow();

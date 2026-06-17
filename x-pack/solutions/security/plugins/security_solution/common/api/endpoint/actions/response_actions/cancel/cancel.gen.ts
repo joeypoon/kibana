@@ -28,7 +28,7 @@ export const CancelRouteRequestBody = lazySchema(() =>
         /**
          * ID of the response action to cancel
          */
-        id: z.string().min(1),
+        id: z.string().min(1).max(50),
       }),
     })
   )

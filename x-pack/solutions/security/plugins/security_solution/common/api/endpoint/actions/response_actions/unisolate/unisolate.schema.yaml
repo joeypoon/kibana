@@ -78,6 +78,7 @@ components:
       properties:
         action:
           type: string
+          maxLength: 128
           description: The action ID (legacy field, same as `data.id`).
         data:
           $ref: '../../../model/schema/common.schema.yaml#/components/schemas/ResponseActionDetails'

@@ -7,6 +7,7 @@ components:
   schemas:
     Id:
       type: string
+      maxLength: 128
       description: A unique identifier
     IdOrUndefined:
       $ref: '#/components/schemas/Id'
@@ -26,17 +27,21 @@ components:
       example: 10
     StartDate:
       type: string
+      maxLength: 64
       description: A start date in ISO 8601 format or Date Math format.
       example: "2023-10-31T00:00:00.000Z"
     EndDate:
       type: string
+      maxLength: 64
       description: An end date in ISO format or Date Math format.
       example: "2023-10-31T23:59:59.999Z"
     AgentId:
       type: string
+      maxLength: 128
       description: Agent ID
     Kuery:
       type: string
+      maxLength: 10000
       description: A KQL string.
       example: "united.endpoint.host.os.name : 'Windows'"
     HostStatuses:
@@ -80,10 +85,12 @@ components:
           items:
             type: string
             minLength: 1
+            maxLength: 128
           minItems: 1
           maxItems: 250
         - type: string
           minLength: 1
+          maxLength: 128
       description: A list of agent IDs. Max of 250.
       example: [ "agent-id-1", "agent-id-2" ]
       minLength: 1
@@ -141,10 +148,12 @@ components:
           items:
             type: string
             minLength: 1
+            maxLength: 1024
           minItems: 1
           maxItems: 50
         - type: string
           minLength: 1
+          maxLength: 1024
       description: A list of user IDs. Max of 50.
       example: [ "user-id-1", "user-id-2" ]
 
@@ -154,10 +163,12 @@ components:
           items:
             type: string
             minLength: 1
+            maxLength: 128
           minItems: 1
           maxItems: 50
         - type: string
           minLength: 1
+          maxLength: 128
       description: A list of action IDs that should include the complete output of the action. Max of 50.
       example: [ "action-id-1", "action-id-2" ]
 
@@ -184,11 +195,13 @@ components:
       items:
         type: string
         minLength: 1
+        maxLength: 128
       minItems: 1
       maxItems: 250
 
     Comment:
       type: string
+      maxLength: 10000
       description: Optional comment
       example: "This is a comment"
 
@@ -221,6 +234,7 @@ components:
           items:
             type: string
             minLength: 1
+            maxLength: 128
         case_ids:
           type: array
           description: The IDs of cases where the action taken will be logged. Max of 50.
@@ -230,6 +244,7 @@ components:
           items:
             type: string
             minLength: 1
+            maxLength: 128
         comment:
           $ref: '#/components/schemas/Comment'
         parameters:
@@ -252,6 +267,7 @@ components:
       properties:
         note:
           type: string
+          maxLength: 10000
           description: A note associated with the protection updates for the given package policy.
 
     ResponseActionDetails:
@@ -262,6 +278,7 @@ components:
          id:
            type: string
            format: uuid
+           maxLength: 128
            description: The response action ID
          command:
            $ref: '#/components/schemas/Command'
@@ -278,17 +295,21 @@ components:
            description: Whether the response action was successful
          status:
            type: string
+           maxLength: 128
            description: The response action status
          startedAt:
            type: string
            format: date-time
+           maxLength: 64
            description: The response action start time
          completedAt:
            type: string
            format: date-time
+           maxLength: 64
            description: The response action completion time
          createdBy:
            type: string
+           maxLength: 1024
            description: The user who created the response action
          agents:
            type: array
@@ -296,6 +317,7 @@ components:
            items:
              type: string
              format: uuid
+             maxLength: 128
          parameters:
            type: object
            description: The parameters of the response action. Content different depending on the response action command
@@ -308,6 +330,7 @@ components:
              properties:
                name:
                  type: string
+                 maxLength: 256
                  description: The host name
          agentState:
            type: object
@@ -324,6 +347,7 @@ components:
                  description: Whether the response action was successful for the agent ID
                completedAt:
                  type: string
+                 maxLength: 64
                  description: The date and time the response action was completed for the agent ID
          outputs:
            type: object
@@ -345,6 +369,7 @@ components:
                  oneOf:
                    - type: object
                    - type: string
+                     maxLength: 100000
 
 
 

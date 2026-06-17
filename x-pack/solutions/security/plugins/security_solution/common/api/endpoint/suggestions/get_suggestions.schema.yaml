@@ -17,18 +17,33 @@ paths:
             schema:
               type: object
               required:
-                - parameters
+                - field
+                - query
               properties:
                 field:
                   type: string
+                  maxLength: 256
+                  description: ECS field path for autocomplete suggestions.
                 query:
                   type: string
+                  maxLength: 1024
+                  description: Autocomplete prefix query string.
                 filters:
                   type: array
                   maxItems: 50
+                  description: Elasticsearch filter clauses. Runtime validation in get_suggestions.ts enforces key count, array item count, and string lengths; the generated schema only bounds top-level array size.
                   items:
                     type: object
-                fieldMeta: {}
+                    additionalProperties: true
+                fieldMeta:
+                  type: object
+                  description: Field metadata map. Runtime validation in get_suggestions.ts enforces a maximum of 50 keys and per-key string lengths; the generated schema only bounds value types.
+                  additionalProperties:
+                    oneOf:
+                      - type: string
+                        maxLength: 10000
+                      - type: number
+                      - type: boolean
       parameters:
         - name: suggestion_type
           in: path
@@ -37,6 +52,10 @@ paths:
             type: string
             enum:
               - eventFilters
+              - endpoints
+              - endpointExceptions
+              - trustedApps
+              - trustedDevices
 
       responses:
         '200':

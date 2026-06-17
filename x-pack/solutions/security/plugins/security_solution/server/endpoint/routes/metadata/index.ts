@@ -11,6 +11,7 @@ import {
   GetMetadataListRequestSchema,
   GetMetadataRequestSchema,
 } from '../../../../common/api/endpoint';
+import { MAX_KQL_LENGTH } from '../../../../common/endpoint/schema/schema_bounds_constants';
 import { HostStatus } from '../../../../common/endpoint/types';
 import type { EndpointAppContext } from '../../types';
 import {
@@ -29,7 +30,7 @@ import { withEndpointAuthz } from '../with_endpoint_authz';
 
 /* Filters that can be applied to the endpoint fetch route */
 export const endpointFilters = schema.object({
-  kql: schema.nullable(schema.string()),
+  kql: schema.nullable(schema.string({ maxLength: MAX_KQL_LENGTH })),
   host_status: schema.nullable(
     schema.arrayOf(
       schema.oneOf([

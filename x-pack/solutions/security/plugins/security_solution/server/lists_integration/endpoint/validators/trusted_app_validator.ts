@@ -25,6 +25,12 @@ import {
   isValidHash,
 } from '../../../../common/endpoint/service/artifacts/validations';
 import { EndpointArtifactExceptionValidationError } from './errors';
+import {
+  MAX_FIELD_NAME_LENGTH,
+  MAX_FILE_PATH_LENGTH,
+  MAX_HASH_HEX_LENGTH,
+  MAX_SIGNER_VALUE_LENGTH,
+} from '../../../../common/endpoint/schema/schema_bounds_constants';
 
 const ProcessHashField = schema.oneOf([
   schema.literal('process.hash.md5'),
@@ -73,16 +79,19 @@ const CommonEntrySchema = {
     schema.siblingRef('field'),
     ProcessHashField,
     schema.string({
+      maxLength: MAX_HASH_HEX_LENGTH,
       validate: (hash: string) => (isValidHash(hash) ? undefined : `invalid hash value [${hash}]`),
     }),
     schema.conditional(
       schema.siblingRef('field'),
       ProcessExecutablePath,
       schema.string({
+        maxLength: MAX_FILE_PATH_LENGTH,
         validate: (pathValue: string) =>
           pathValue.length > 0 ? undefined : `invalid path value [${pathValue}]`,
       }),
       schema.string({
+        maxLength: MAX_SIGNER_VALUE_LENGTH,
         validate: (signerValue: string) =>
           signerValue.length > 0 ? undefined : `invalid signer value [${signerValue}]`,
       })
@@ -104,7 +113,7 @@ const SignerEntrySchema = {
       }),
       schema.object({
         field: schema.literal('subject_name'),
-        value: schema.string({ minLength: 1 }),
+        value: schema.string({ minLength: 1, maxLength: MAX_SIGNER_VALUE_LENGTH }),
         type: schema.literal('match'),
         operator: schema.literal('included'),
       }),
@@ -197,7 +206,7 @@ const TrustedAppAdvancedModeDataSchema = schema.object(
     entries: schema.arrayOf(
       schema.object(
         {
-          field: schema.string(),
+          field: schema.string({ maxLength: MAX_FIELD_NAME_LENGTH }),
         },
         { unknowns: 'ignore' }
       ),

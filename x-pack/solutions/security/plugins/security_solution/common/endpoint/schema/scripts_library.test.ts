@@ -9,6 +9,7 @@
 import { Readable } from 'stream';
 import type { CreateScriptRequestBody } from '../../api/endpoint/scripts_library';
 import {
+  DeleteScriptRequestSchema,
   GetOneScriptRequestSchema,
   DownloadScriptRequestSchema,
   PatchUpdateScriptRequestSchema,
@@ -17,6 +18,13 @@ import {
 import type { HapiReadableStream } from '../../../server/types';
 import { ListScriptsRequestSchema } from '../../api/endpoint/scripts_library/list_scripts';
 import type { SortableScriptLibraryFields } from '../types';
+import {
+  MAX_FILE_PATH_LENGTH,
+  MAX_ID_LENGTH,
+  MAX_KQL_LENGTH,
+  MAX_LONG_TEXT_LENGTH,
+  MAX_NAME_LENGTH,
+} from './schema_bounds_constants';
 
 describe('Scripts library schemas', () => {
   const createFileStream = (): HapiReadableStream => {
@@ -78,6 +86,18 @@ describe('Scripts library schemas', () => {
         expect(() => CreateScriptRequestSchema.body.validate(reqBody)).toThrow(
           '[name]: Value can not be an empty string'
         );
+      });
+
+      it('should accept `name` at max length', () => {
+        reqBody.name = 'n'.repeat(MAX_NAME_LENGTH);
+
+        expect(() => CreateScriptRequestSchema.body.validate(reqBody)).not.toThrow();
+      });
+
+      it('should reject `name` over max length', () => {
+        reqBody.name = 'n'.repeat(MAX_NAME_LENGTH + 1);
+
+        expect(() => CreateScriptRequestSchema.body.validate(reqBody)).toThrow();
       });
 
       // ------------------------------------
@@ -150,6 +170,20 @@ describe('Scripts library schemas', () => {
         expect(() => CreateScriptRequestSchema.body.validate(reqBody)).toThrow(
           '[pathToExecutable]: expected value of type [string] but got [undefined]'
         );
+      });
+
+      it('should accept `pathToExecutable` at max length when `fileType` is "archive"', () => {
+        reqBody.fileType = 'archive';
+        reqBody.pathToExecutable = 'p'.repeat(MAX_FILE_PATH_LENGTH);
+
+        expect(() => CreateScriptRequestSchema.body.validate(reqBody)).not.toThrow();
+      });
+
+      it('should reject `pathToExecutable` over max length when `fileType` is "archive"', () => {
+        reqBody.fileType = 'archive';
+        reqBody.pathToExecutable = 'p'.repeat(MAX_FILE_PATH_LENGTH + 1);
+
+        expect(() => CreateScriptRequestSchema.body.validate(reqBody)).toThrow();
       });
 
       it('should not allow `pathToExecutable` if `fileType` is "script"', () => {
@@ -241,6 +275,18 @@ describe('Scripts library schemas', () => {
 
         expect(() => CreateScriptRequestSchema.body.validate(reqBody)).not.toThrow();
       });
+
+      it.each(optionalStringFields)('should accept `%s` at max length', (field) => {
+        reqBody[field] = 't'.repeat(MAX_LONG_TEXT_LENGTH);
+
+        expect(() => CreateScriptRequestSchema.body.validate(reqBody)).not.toThrow();
+      });
+
+      it.each(optionalStringFields)('should reject `%s` over max length', (field) => {
+        reqBody[field] = 't'.repeat(MAX_LONG_TEXT_LENGTH + 1);
+
+        expect(() => CreateScriptRequestSchema.body.validate(reqBody)).toThrow();
+      });
     });
   });
 
@@ -304,6 +350,22 @@ describe('Scripts library schemas', () => {
       expect(() => ListScriptsRequestSchema.query.validate({ kuery: 'foo:bar' })).toThrow(
         '[kuery]: Invalid KQL filter field: foo'
       );
+    });
+
+    it('should reject kuery longer than max length', () => {
+      expect(() =>
+        ListScriptsRequestSchema.query.validate({
+          kuery: 'name:'.concat('a'.repeat(MAX_KQL_LENGTH - 4)),
+        })
+      ).toThrow();
+    });
+
+    it('should accept kuery at max length', () => {
+      expect(
+        ListScriptsRequestSchema.query.validate({
+          kuery: 'name:'.concat('a'.repeat(MAX_KQL_LENGTH - 5)),
+        })
+      ).toBeTruthy();
     });
   });
 
@@ -383,17 +445,89 @@ describe('Scripts library schemas', () => {
         '[pathToExecutable]: expected value of type [string] but got [undefined]'
       );
     });
+
+    it('should accept `version` at max length', () => {
+      expect(
+        PatchUpdateScriptRequestSchema.body.validate({
+          name: 'foo',
+          version: 'v'.repeat(MAX_ID_LENGTH),
+        })
+      ).toBeTruthy();
+    });
+
+    it('should reject `version` over max length', () => {
+      expect(() =>
+        PatchUpdateScriptRequestSchema.body.validate({
+          name: 'foo',
+          version: 'v'.repeat(MAX_ID_LENGTH + 1),
+        })
+      ).toThrow();
+    });
+
+    it('should accept `script_id` param at max length', () => {
+      expect(
+        PatchUpdateScriptRequestSchema.params.validate({
+          script_id: 's'.repeat(MAX_ID_LENGTH),
+        })
+      ).toBeTruthy();
+    });
+
+    it('should reject `script_id` param over max length', () => {
+      expect(() =>
+        PatchUpdateScriptRequestSchema.params.validate({
+          script_id: 's'.repeat(MAX_ID_LENGTH + 1),
+        })
+      ).toThrow();
+    });
+  });
+
+  describe('Delete API', () => {
+    it('should accept a script_id URL param at max length', () => {
+      expect(
+        DeleteScriptRequestSchema.params.validate({ script_id: 's'.repeat(MAX_ID_LENGTH) })
+      ).toBeTruthy();
+    });
+
+    it('should reject a script_id URL param over max length', () => {
+      expect(() =>
+        DeleteScriptRequestSchema.params.validate({ script_id: 's'.repeat(MAX_ID_LENGTH + 1) })
+      ).toThrow();
+    });
   });
 
   describe('Download API', () => {
     it('should accept a script_id URL param', () => {
       expect(DownloadScriptRequestSchema.params.validate({ script_id: 'foo' })).toBeTruthy();
     });
+
+    it('should accept a script_id URL param at max length', () => {
+      expect(
+        DownloadScriptRequestSchema.params.validate({ script_id: 's'.repeat(MAX_ID_LENGTH) })
+      ).toBeTruthy();
+    });
+
+    it('should reject a script_id URL param over max length', () => {
+      expect(() =>
+        DownloadScriptRequestSchema.params.validate({ script_id: 's'.repeat(MAX_ID_LENGTH + 1) })
+      ).toThrow();
+    });
   });
 
   describe('Get one API', () => {
     it('should accept a script_id URL param', () => {
       expect(GetOneScriptRequestSchema.params.validate({ script_id: 'foo' })).toBeTruthy();
+    });
+
+    it('should accept a script_id URL param at max length', () => {
+      expect(
+        GetOneScriptRequestSchema.params.validate({ script_id: 's'.repeat(MAX_ID_LENGTH) })
+      ).toBeTruthy();
+    });
+
+    it('should reject a script_id URL param over max length', () => {
+      expect(() =>
+        GetOneScriptRequestSchema.params.validate({ script_id: 's'.repeat(MAX_ID_LENGTH + 1) })
+      ).toThrow();
     });
   });
 });

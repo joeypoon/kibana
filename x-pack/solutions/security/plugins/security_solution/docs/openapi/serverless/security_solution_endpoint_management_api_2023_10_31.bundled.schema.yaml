@@ -170,6 +170,7 @@ paths:
           required: true
           schema:
             example: fr518850-681a-4y60-aa98-e22640cae2b8
+            maxLength: 128
             type: string
       responses:
         '200':
@@ -208,6 +209,7 @@ paths:
           name: action_id
           required: true
           schema:
+            maxLength: 128
             type: string
         - description: >
             The file identifier is constructed in one of two ways:
@@ -223,6 +225,7 @@ paths:
           name: file_id
           required: true
           schema:
+            maxLength: 128
             type: string
       responses:
         '200':
@@ -298,6 +301,7 @@ paths:
           name: action_id
           required: true
           schema:
+            maxLength: 128
             type: string
         - description: >
             The file identifier is constructed in one of two ways:
@@ -313,6 +317,7 @@ paths:
           name: file_id
           required: true
           schema:
+            maxLength: 128
             type: string
       responses:
         '200':
@@ -543,6 +548,7 @@ paths:
                     - alert-id-1
                     - alert-id-2
                   items:
+                    maxLength: 128
                     minLength: 1
                     type: string
                   maxItems: 50
@@ -554,6 +560,7 @@ paths:
                     - case-id-1
                     - case-id-2
                   items:
+                    maxLength: 128
                     minLength: 1
                     type: string
                   maxItems: 50
@@ -1032,6 +1039,7 @@ paths:
                     - alert-id-1
                     - alert-id-2
                   items:
+                    maxLength: 128
                     minLength: 1
                     type: string
                   maxItems: 50
@@ -1043,6 +1051,7 @@ paths:
                     - case-id-1
                     - case-id-2
                   items:
+                    maxLength: 128
                     minLength: 1
                     type: string
                   maxItems: 50
@@ -1244,6 +1253,7 @@ paths:
           required: true
           schema:
             example: ed518850-681a-4d60-bb98-e22640cae2a8
+            maxLength: 128
             type: string
       responses:
         '200':
@@ -1327,6 +1337,7 @@ paths:
           name: package_policy_id
           required: true
           schema:
+            maxLength: 128
             type: string
       responses:
         '200':
@@ -1353,6 +1364,7 @@ paths:
           name: package_policy_id
           required: true
           schema:
+            maxLength: 128
             type: string
       requestBody:
         content:
@@ -1367,6 +1379,7 @@ paths:
               properties:
                 note:
                   description: The note content.
+                  maxLength: 10000
                   type: string
         required: true
       responses:
@@ -1534,6 +1547,7 @@ paths:
           schema:
             description: The ID of the script entry to be deleted.
             example: fr518850-681a-4y60-aa98-e22640cae2b8
+            maxLength: 128
             type: string
       responses:
         '200':
@@ -1561,6 +1575,7 @@ paths:
           schema:
             description: The ID of the script entry.
             example: fr518850-681a-4y60-aa98-e22640cae2b8
+            maxLength: 128
             type: string
       responses:
         '200':
@@ -1598,6 +1613,7 @@ paths:
           schema:
             description: The ID of the script entry to be updated.
             example: fr518850-681a-4y60-aa98-e22640cae2b8
+            maxLength: 128
             type: string
       requestBody:
         content:
@@ -1656,6 +1672,7 @@ paths:
           schema:
             description: The ID of the script entry.
             example: fr518850-681a-4y60-aa98-e22640cae2b8
+            maxLength: 128
             type: string
       responses:
         '200':
@@ -1736,6 +1753,7 @@ components:
         - data
     AgentId:
       description: Agent ID
+      maxLength: 128
       type: string
     AgentIds:
       description: A list of agent IDs. Max of 250.
@@ -1745,12 +1763,14 @@ components:
       minLength: 1
       oneOf:
         - items:
+            maxLength: 128
             minLength: 1
             type: string
           maxItems: 250
           minItems: 1
           type: array
-        - minLength: 1
+        - maxLength: 128
+          minLength: 1
           type: string
     AgentTypes:
       description: List of agent types to retrieve. Defaults to `endpoint`.
@@ -1785,6 +1805,7 @@ components:
         in the archive that should be executed once its contents are extracted.
         The path should be relative to the root of the archive.
       example: ./bin/script.sh
+      maxLength: 4096
       type: string
     Cancel:
       allOf:
@@ -1821,6 +1842,7 @@ components:
                 - alert-id-1
                 - alert-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -1832,6 +1854,7 @@ components:
                 - case-id-1
                 - case-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -1853,6 +1876,7 @@ components:
                 id:
                   description: ID of the response action to cancel
                   example: 7f8c9b2a-4d3e-4f5a-8b1c-2e3f4a5b6c7d
+                  maxLength: 50
                   minLength: 1
                   type: string
               required:
@@ -1864,10 +1888,12 @@ components:
       properties:
         cloudFile:
           description: Script name in cloud storage.
+          maxLength: 4096
           minLength: 1
           type: string
         commandLine:
           description: Command line arguments.
+          maxLength: 30000
           minLength: 1
           type: string
         timeout:
@@ -1905,15 +1931,18 @@ components:
     Comment:
       description: Optional comment
       example: This is a comment
+      maxLength: 10000
       type: string
     CreateScriptRouteRequestBody:
       type: object
       properties:
         description:
           description: Description of the script and its purpose/functionality
+          maxLength: 10000
           type: string
         example:
           description: Example usage of the script
+          maxLength: 10000
           type: string
         file:
           description: The script file upload
@@ -1924,16 +1953,18 @@ components:
         instructions:
           description: Instructions for using the script, including details around its
             supported input arguments
+          maxLength: 10000
           type: string
         name:
           description: Name of the script
+          maxLength: 256
           type: string
         pathToExecutable:
           $ref: '#/components/schemas/ArchivePathToExecutableSchema'
         platform:
-          description: Platforms supported by the the script
           items:
             $ref: '#/components/schemas/EndpointScriptPlatform'
+          maxItems: 3
           type: array
         requiresInput:
           description: Whether the script requires input arguments
@@ -1942,6 +1973,7 @@ components:
           description: Tags to categorize the script
           items:
             $ref: '#/components/schemas/EndpointScriptTags'
+          maxItems: 50
           type: array
       required:
         - name
@@ -1963,6 +1995,7 @@ components:
     EndDate:
       description: An end date in ISO format or Date Math format.
       example: '2023-10-31T23:59:59.999Z'
+      maxLength: 64
       type: string
     EndpointIds:
       description: List of endpoint IDs (cannot contain empty strings). Max of 250.
@@ -1970,6 +2003,7 @@ components:
         - endpoint-id-1
         - endpoint-id-2
       items:
+        maxLength: 128
         minLength: 1
         type: string
       maxItems: 250
@@ -2075,11 +2109,13 @@ components:
       properties:
         scriptId:
           description: The script ID from the scripts library that will be executed.
+          maxLength: 128
           minLength: 1
           type: string
         scriptInput:
           description: The input parameter arguments (if any) for the script that will be
             executed.
+          maxLength: 4096
           minLength: 1
           type: string
       required:
@@ -2098,6 +2134,7 @@ components:
         description:
           description: Description of the script and its purpose/functionality
           example: Collects host data for investigation
+          maxLength: 10000
           type: string
         downloadUri:
           description: URI to download the script file. Note that this is the relative
@@ -2105,6 +2142,7 @@ components:
           example: /api/endpoint/scripts_library/123e4567-e89b-12d3-a456-426655440000/download
           type: string
         example:
+          maxLength: 10000
           type: string
         fileHash:
           description: SHA256 hash of the script file that was uploaded
@@ -2125,19 +2163,23 @@ components:
         instructions:
           description: Instructions for using the script, including details around its
             supported input arguments
+          maxLength: 10000
           type: string
         name:
           example: Collect host data
+          maxLength: 256
           type: string
         pathToExecutable:
           description: >
             The relative path to the file included in the archive that should be
             executed once its contents are extracted. Applicable only for
             scripts uploaded as an archive (.zip file for example).
+          maxLength: 4096
           type: string
         platform:
           items:
             $ref: '#/components/schemas/EndpointScriptPlatform'
+          maxItems: 3
           type: array
         requiresInput:
           type: boolean
@@ -2145,6 +2187,7 @@ components:
           description: Tags that categorize the script
           items:
             $ref: '#/components/schemas/EndpointScriptTags'
+          maxItems: 50
           type: array
         updatedAt:
           format: date-time
@@ -2183,6 +2226,7 @@ components:
         - systemManagement
         - userManagement
         - troubleshooting
+      maxLength: 32
       type: string
     Execute:
       allOf:
@@ -2240,6 +2284,7 @@ components:
                 - alert-id-1
                 - alert-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -2251,6 +2296,7 @@ components:
                 - case-id-1
                 - case-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -2271,6 +2317,7 @@ components:
               properties:
                 command:
                   description: The shell command to execute on the endpoint.
+                  maxLength: 100000
                   minLength: 1
                   type: string
                 timeout:
@@ -2343,12 +2390,16 @@ components:
         agentTypes:
           description: The list of agent types the query was filtered by.
           items:
+            maxLength: 64
             type: string
+          maxItems: 10
           type: array
         commands:
           description: The list of commands the query was filtered by.
           items:
+            maxLength: 64
             type: string
+          maxItems: 50
           type: array
         data:
           description: The list of response actions.
@@ -2358,10 +2409,13 @@ components:
         elasticAgentIds:
           description: The list of elastic agent IDs the query was filtered by.
           items:
+            maxLength: 128
             type: string
+          maxItems: 250
           type: array
         endDate:
           description: The end date filter applied to the query.
+          maxLength: 64
           type: string
         page:
           description: The current page number.
@@ -2371,11 +2425,14 @@ components:
           type: integer
         startDate:
           description: The start date filter applied to the query.
+          maxLength: 64
           type: string
         statuses:
           description: The list of statuses the query was filtered by.
           items:
+            maxLength: 64
             type: string
+          maxItems: 10
           type: array
         total:
           description: The total number of response actions matching the query.
@@ -2383,7 +2440,9 @@ components:
         userIds:
           description: The list of user IDs the query was filtered by.
           items:
+            maxLength: 1024
             type: string
+          maxItems: 50
           type: array
     GetFile:
       allOf:
@@ -2438,6 +2497,7 @@ components:
                 - alert-id-1
                 - alert-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -2449,6 +2509,7 @@ components:
                 - case-id-1
                 - case-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -2469,6 +2530,7 @@ components:
               properties:
                 path:
                   description: The full file path to retrieve from the endpoint.
+                  maxLength: 4096
                   type: string
               required:
                 - path
@@ -2487,6 +2549,7 @@ components:
             - alert-id-1
             - alert-id-2
           items:
+            maxLength: 128
             minLength: 1
             type: string
           maxItems: 50
@@ -2498,6 +2561,7 @@ components:
             - case-id-1
             - case-id-2
           items:
+            maxLength: 128
             minLength: 1
             type: string
           maxItems: 50
@@ -2516,10 +2580,12 @@ components:
       properties:
         commandLine:
           description: Command line arguments.
+          maxLength: 30000
           minLength: 1
           type: string
         hostPath:
           description: Absolute or relative path of script on host machine.
+          maxLength: 4096
           minLength: 1
           type: string
         timeout:
@@ -2553,6 +2619,7 @@ components:
       properties:
         action:
           description: The action ID (legacy field, same as `data.id`).
+          maxLength: 128
           type: string
         data:
           $ref: '#/components/schemas/ResponseActionDetails'
@@ -2626,6 +2693,7 @@ components:
                 - alert-id-1
                 - alert-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -2637,6 +2705,7 @@ components:
                 - case-id-1
                 - case-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -2666,6 +2735,7 @@ components:
                     entity_id:
                       description: The entity ID of the process to terminate.
                       example: abc123
+                      maxLength: 512
                       minLength: 1
                       type: string
                 - type: object
@@ -2674,6 +2744,7 @@ components:
                       description: The name of the process to terminate. Valid for SentinelOne agent
                         type only.
                       example: Elastic
+                      maxLength: 512
                       minLength: 1
                       type: string
           required:
@@ -2681,6 +2752,7 @@ components:
     Kuery:
       description: A KQL string.
       example: "united.endpoint.host.os.name : 'Windows'"
+      maxLength: 10000
       type: string
     MDERunScriptParameters:
       description: Parameters for Run Script response action against Microsoft
@@ -2695,10 +2767,12 @@ components:
       properties:
         args:
           description: Optional command line arguments for the script.
+          maxLength: 4096
           minLength: 1
           type: string
         scriptName:
           description: The name of the script to execute from the cloud storage.
+          maxLength: 128
           minLength: 1
           type: string
       required:
@@ -2787,6 +2861,7 @@ components:
                 - alert-id-1
                 - alert-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -2798,6 +2873,7 @@ components:
                 - case-id-1
                 - case-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -2828,6 +2904,7 @@ components:
                   type: object
                   properties:
                     pid:
+                      minimum: 1
                       type: number
                     type:
                       enum:
@@ -2840,6 +2917,8 @@ components:
                   type: object
                   properties:
                     entity_id:
+                      maxLength: 512
+                      minLength: 1
                       type: string
                     type:
                       enum:
@@ -3050,9 +3129,11 @@ components:
       properties:
         description:
           description: Description of the script and its purpose/functionality
+          maxLength: 10000
           type: string
         example:
           description: Example usage of the script
+          maxLength: 10000
           type: string
         file:
           description: The script file upload
@@ -3063,9 +3144,11 @@ components:
         instructions:
           description: Instructions for using the script, including details around its
             supported input arguments
+          maxLength: 10000
           type: string
         name:
           description: Name of the script
+          maxLength: 256
           type: string
         pathToExecutable:
           $ref: '#/components/schemas/ArchivePathToExecutableSchema'
@@ -3073,6 +3156,7 @@ components:
           description: Platforms supported by the the script
           items:
             $ref: '#/components/schemas/EndpointScriptPlatform'
+          maxItems: 3
           type: array
         requiresInput:
           description: Whether the script requires input arguments
@@ -3081,7 +3165,12 @@ components:
           description: Tags to categorize the script
           items:
             $ref: '#/components/schemas/EndpointScriptTags'
+          maxItems: 50
           type: array
+        version:
+          description: Version label for optimistic concurrency control
+          maxLength: 128
+          type: string
     PendingActionDataType:
       description: Number of pending actions of this type.
       type: integer
@@ -3124,16 +3213,19 @@ components:
         note:
           description: A note associated with the protection updates for the given package
             policy.
+          maxLength: 10000
           type: string
     RawScriptParameters:
       type: object
       properties:
         commandLine:
           description: Command line arguments.
+          maxLength: 30000
           minLength: 1
           type: string
         raw:
           description: Raw script content.
+          maxLength: 100000
           minLength: 1
           type: string
         timeout:
@@ -3176,6 +3268,7 @@ components:
           description: The agent IDs for the hosts that the response action was sent to
           items:
             format: uuid
+            maxLength: 128
             type: string
           type: array
         agentState:
@@ -3186,6 +3279,7 @@ components:
               completedAt:
                 description: The date and time the response action was completed for the agent
                   ID
+                maxLength: 64
                 type: string
               isCompleted:
                 description: Whether the response action is completed for the agent ID
@@ -3203,9 +3297,11 @@ components:
         completedAt:
           description: The response action completion time
           format: date-time
+          maxLength: 64
           type: string
         createdBy:
           description: The user who created the response action
+          maxLength: 1024
           type: string
         hosts:
           additionalProperties:
@@ -3214,6 +3310,7 @@ components:
             properties:
               name:
                 description: The host name
+                maxLength: 256
                 type: string
           description: An object containing the host names associated with the agent IDs
             the response action was sent to
@@ -3221,6 +3318,7 @@ components:
         id:
           description: The response action ID
           format: uuid
+          maxLength: 128
           type: string
         isComplete:
           description: Whether the response action is complete
@@ -3238,7 +3336,8 @@ components:
                   depends on the response action command.
                 oneOf:
                   - type: object
-                  - type: string
+                  - maxLength: 100000
+                    type: string
               type:
                 enum:
                   - json
@@ -3263,9 +3362,11 @@ components:
         startedAt:
           description: The response action start time
           format: date-time
+          maxLength: 64
           type: string
         status:
           description: The response action status
+          maxLength: 128
           type: string
         wasSuccessful:
           description: Whether the response action was successful
@@ -3380,6 +3481,7 @@ components:
                 - alert-id-1
                 - alert-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -3391,6 +3493,7 @@ components:
                 - case-id-1
                 - case-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -3453,6 +3556,7 @@ components:
                 - alert-id-1
                 - alert-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -3464,6 +3568,7 @@ components:
                 - case-id-1
                 - case-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -3485,6 +3590,7 @@ components:
                 path:
                   description: The folder or file's full path (including the file name).
                   example: /usr/my-file.txt
+                  maxLength: 4096
                   type: string
               required:
                 - path
@@ -3522,10 +3628,12 @@ components:
       properties:
         scriptId:
           description: The script ID from SentinelOne scripts library that will be executed.
+          maxLength: 128
           minLength: 1
           type: string
         scriptInput:
           description: The input parameter arguments for the script that was selected.
+          maxLength: 4096
           minLength: 1
           type: string
       required:
@@ -3556,6 +3664,7 @@ components:
     StartDate:
       description: A start date in ISO 8601 format or Date Math format.
       example: '2023-10-31T00:00:00.000Z'
+      maxLength: 64
       type: string
     SuccessResponse:
       description: A generic successful response.
@@ -3616,6 +3725,7 @@ components:
                 - alert-id-1
                 - alert-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -3627,6 +3737,7 @@ components:
                 - case-id-1
                 - case-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -3656,6 +3767,7 @@ components:
                     entity_id:
                       description: The entity ID of the process to suspend.
                       example: abc123
+                      maxLength: 512
                       minLength: 1
                       type: string
           required:
@@ -3686,6 +3798,7 @@ components:
       properties:
         action:
           description: The action ID (legacy field, same as `data.id`).
+          maxLength: 128
           type: string
         data:
           $ref: '#/components/schemas/ResponseActionDetails'
@@ -3738,6 +3851,7 @@ components:
                 - alert-id-1
                 - alert-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -3749,6 +3863,7 @@ components:
                 - case-id-1
                 - case-id-2
               items:
+                maxLength: 128
                 minLength: 1
                 type: string
               maxItems: 50
@@ -3787,12 +3902,14 @@ components:
         - user-id-2
       oneOf:
         - items:
+            maxLength: 1024
             minLength: 1
             type: string
           maxItems: 50
           minItems: 1
           type: array
-        - minLength: 1
+        - maxLength: 1024
+          minLength: 1
           type: string
     WithOutputs:
       description: A list of action IDs that should include the complete output of the
@@ -3802,12 +3919,14 @@ components:
         - action-id-2
       oneOf:
         - items:
+            maxLength: 128
             minLength: 1
             type: string
           maxItems: 50
           minItems: 1
           type: array
-        - minLength: 1
+        - maxLength: 128
+          minLength: 1
           type: string
   securitySchemes:
     BasicAuth:

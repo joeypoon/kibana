@@ -8,6 +8,13 @@
 import type { TypeOf } from '@kbn/config-schema';
 import { schema } from '@kbn/config-schema';
 import { SUPPORTED_HOST_OS_TYPE } from '../../../../endpoint/constants';
+import {
+  MAX_ALERT_IDS,
+  MAX_CASE_IDS,
+  MAX_ENDPOINT_IDS,
+  MAX_ID_LENGTH,
+  MAX_LONG_TEXT_LENGTH,
+} from '../../../../endpoint/schema/schema_bounds_constants';
 import { RESPONSE_ACTION_AGENT_TYPE } from '../../../../endpoint/service/response_actions/constants';
 
 export const AgentTypeSchemaLiteral = RESPONSE_ACTION_AGENT_TYPE.map((agentType) =>
@@ -31,9 +38,9 @@ export const HostOsTypeSchemaLiteral = SUPPORTED_HOST_OS_TYPE.map((osType) =>
 
 export const BaseActionRequestSchema = {
   /** A list of endpoint IDs whose hosts will be isolated (Fleet Agent IDs will be retrieved for these) */
-  endpoint_ids: schema.arrayOf(schema.string({ minLength: 1 }), {
+  endpoint_ids: schema.arrayOf(schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }), {
     minSize: 1,
-    maxSize: 250,
+    maxSize: MAX_ENDPOINT_IDS,
     validate: (endpointIds) => {
       if (endpointIds.map((v) => v.trim()).some((v) => !v.length)) {
         return 'endpoint_ids cannot contain empty strings';
@@ -42,9 +49,9 @@ export const BaseActionRequestSchema = {
   }),
   /** If defined, any case associated with the given IDs will be updated */
   alert_ids: schema.maybe(
-    schema.arrayOf(schema.string({ minLength: 1 }), {
+    schema.arrayOf(schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }), {
       minSize: 1,
-      maxSize: 50,
+      maxSize: MAX_ALERT_IDS,
       validate: (alertIds) => {
         if (alertIds.map((v) => v.trim()).some((v) => !v.length)) {
           return 'alert_ids cannot contain empty strings';
@@ -54,9 +61,9 @@ export const BaseActionRequestSchema = {
   ),
   /** Case IDs to be updated */
   case_ids: schema.maybe(
-    schema.arrayOf(schema.string({ minLength: 1 }), {
+    schema.arrayOf(schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }), {
       minSize: 1,
-      maxSize: 50,
+      maxSize: MAX_CASE_IDS,
       validate: (caseIds) => {
         if (caseIds.map((v) => v.trim()).some((v) => !v.length)) {
           return 'case_ids cannot contain empty strings';
@@ -64,7 +71,7 @@ export const BaseActionRequestSchema = {
       },
     })
   ),
-  comment: schema.maybe(schema.string()),
+  comment: schema.maybe(schema.string({ maxLength: MAX_LONG_TEXT_LENGTH })),
   parameters: schema.maybe(schema.object({})),
   agent_type: schema.maybe(
     schema.oneOf(

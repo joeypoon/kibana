@@ -6,22 +6,15 @@
  */
 
 import { schema } from '@kbn/config-schema';
-
-// `ecs_mapping` lives in two shapes:
-// - HTTP request bodies use the record form `{ [field]: { value/field } }`
-// - The SO is written via `convertECSMappingToArray`, producing
-//   `Array<{ key, value }>` — the canonical on-disk shape since Oct 2021.
-// Forward-compat schemas must accept both so they validate on-disk data.
-const ecsMappingSchema = schema.oneOf([
-  schema.recordOf(schema.string(), schema.object({}, { unknowns: 'allow' })),
-  schema.arrayOf(
-    schema.object({
-      key: schema.string(),
-      value: schema.object({}, { unknowns: 'allow' }),
-    }),
-    { maxSize: 200 }
-  ),
-]);
+import {
+  boundedPackQueriesSchema,
+  MAX_RRULE_DATE_OR_SPLAY_LENGTH,
+  MAX_RRULE_LENGTH,
+  packEcsMappingSchema,
+  policyIdsSchema,
+  savedQueryEcsMappingSchema,
+  shardsSchema,
+} from './config_schema_bounds';
 
 const savedQuerySchemaV1 = schema.object({
   id: schema.string(),
@@ -38,9 +31,7 @@ const savedQuerySchemaV1 = schema.object({
   snapshot: schema.maybe(schema.boolean()),
   removed: schema.maybe(schema.boolean()),
   prebuilt: schema.maybe(schema.boolean()),
-  ecs_mapping: schema.maybe(
-    schema.recordOf(schema.string(), schema.object({}, { unknowns: 'allow' }))
-  ),
+  ecs_mapping: schema.maybe(savedQueryEcsMappingSchema),
 });
 
 export const savedQuerySchemaV2 = savedQuerySchemaV1.extends({
@@ -62,7 +53,7 @@ const packQuerySchema = schema.object(
     timeout: schema.maybe(schema.number()),
     platform: schema.maybe(schema.string()),
     version: schema.maybe(schema.string()),
-    ecs_mapping: schema.maybe(ecsMappingSchema),
+    ecs_mapping: schema.maybe(packEcsMappingSchema),
     snapshot: schema.maybe(schema.boolean()),
     removed: schema.maybe(schema.boolean()),
   },
@@ -72,12 +63,7 @@ const packQuerySchema = schema.object(
 const packSchemaV1 = schema.object({
   name: schema.maybe(schema.string()),
   description: schema.maybe(schema.string()),
-  queries: schema.maybe(
-    schema.oneOf([
-      schema.recordOf(schema.string(), packQuerySchema),
-      schema.arrayOf(packQuerySchema, { maxSize: 1000 }),
-    ])
-  ),
+  queries: schema.maybe(boundedPackQueriesSchema(packQuerySchema)),
   // Pack-asset version (prebuilt-pack version number). Name is taken — a future
   // V4 / D29 "min osquery version" field MUST use a different name (e.g.
   // `min_osquery_version`) to avoid type collision with this number field.
@@ -87,13 +73,8 @@ const packSchemaV1 = schema.object({
   created_by: schema.maybe(schema.nullable(schema.string())),
   updated_at: schema.maybe(schema.string()),
   updated_by: schema.maybe(schema.nullable(schema.string())),
-  policy_ids: schema.maybe(schema.arrayOf(schema.string())),
-  shards: schema.maybe(
-    schema.oneOf([
-      schema.recordOf(schema.string(), schema.number()),
-      schema.arrayOf(schema.object({ key: schema.string(), value: schema.number() })),
-    ])
-  ),
+  policy_ids: schema.maybe(policyIdsSchema),
+  shards: schema.maybe(shardsSchema),
 });
 
 export const packSchemaV2 = packSchemaV1.extends({
@@ -103,10 +84,10 @@ export const packSchemaV2 = packSchemaV1.extends({
 
 const rruleScheduleConfigSchema = schema.object(
   {
-    rrule: schema.string(),
-    start_date: schema.string(),
-    end_date: schema.maybe(schema.string()),
-    splay: schema.maybe(schema.string()),
+    rrule: schema.string({ maxLength: MAX_RRULE_LENGTH }),
+    start_date: schema.string({ maxLength: MAX_RRULE_DATE_OR_SPLAY_LENGTH }),
+    end_date: schema.maybe(schema.string({ maxLength: MAX_RRULE_DATE_OR_SPLAY_LENGTH })),
+    splay: schema.maybe(schema.string({ maxLength: MAX_RRULE_DATE_OR_SPLAY_LENGTH })),
     timeout: schema.maybe(schema.number()),
   },
   { unknowns: 'allow' }

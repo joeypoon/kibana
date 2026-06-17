@@ -7,7 +7,8 @@
 
 import { ENDPOINT_DEFAULT_PAGE, ENDPOINT_DEFAULT_PAGE_SIZE } from '../constants';
 import { HostStatus } from '../types';
-import { GetMetadataListRequestSchema } from '../../api/endpoint';
+import { GetMetadataListRequestSchema, GetMetadataRequestSchema } from '../../api/endpoint';
+import { MAX_ID_LENGTH } from './schema_bounds_constants';
 
 // NOTE: Even though schemas are kept in common/api/endpoint - we keep tests here, because common/api should import from outside
 describe('endpoint metadata schema', () => {
@@ -66,10 +67,37 @@ describe('endpoint metadata schema', () => {
       expect(query.validate(queryParams)).toEqual(expected);
     });
 
+    it('should throw if kuery exceeds max length', () => {
+      expect(() => query.validate({ kuery: 'a'.repeat(10_001) })).toThrowError();
+    });
+
+    it('should accept kuery at max length', () => {
+      const kuery = 'a'.repeat(10_000);
+      expect(query.validate({ kuery })).toEqual({
+        page: ENDPOINT_DEFAULT_PAGE,
+        pageSize: ENDPOINT_DEFAULT_PAGE_SIZE,
+        kuery,
+      });
+    });
+
     it('should throw if invalid hostStatus', () => {
       expect(() =>
         query.validate({ hostStatuses: [HostStatus.UNHEALTHY, 'invalidstatus'] })
       ).toThrowError();
+    });
+  });
+
+  describe('GetMetadataRequestSchema', () => {
+    const params = GetMetadataRequestSchema.params;
+    const maxId = 'a'.repeat(MAX_ID_LENGTH);
+    const overMaxId = 'a'.repeat(MAX_ID_LENGTH + 1);
+
+    it('should accept id at max length', () => {
+      expect(() => params.validate({ id: maxId })).not.toThrow();
+    });
+
+    it('should reject id over max length', () => {
+      expect(() => params.validate({ id: overMaxId })).toThrow();
     });
   });
 });

@@ -23,7 +23,7 @@ export const UnisolateRouteResponse = lazySchema(() =>
     /**
      * The action ID (legacy field, same as `data.id`).
      */
-    action: z.string().optional(),
+    action: z.string().max(128).optional(),
     data: ResponseActionDetails.optional(),
   })
 );

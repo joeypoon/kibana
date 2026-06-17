@@ -6,18 +6,19 @@
  */
 
 import { schema } from '@kbn/config-schema';
+import { MAX_ID_LENGTH, MAX_NOTE_LENGTH } from '../../../endpoint/schema/schema_bounds_constants';
 
 export const GetProtectionUpdatesNoteSchema = {
   params: schema.object({
-    package_policy_id: schema.string(),
+    package_policy_id: schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }),
   }),
 };
 
 export const CreateUpdateProtectionUpdatesNoteSchema = {
   body: schema.object({
-    note: schema.string(),
+    note: schema.string({ maxLength: MAX_NOTE_LENGTH }),
   }),
   params: schema.object({
-    package_policy_id: schema.string(),
+    package_policy_id: schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }),
   }),
 };

@@ -76,3 +76,4 @@ components:
                   type: string
                   description: "The folder or file's full path (including the file name)."
                   example: "/usr/my-file.txt"
+                  maxLength: 4096

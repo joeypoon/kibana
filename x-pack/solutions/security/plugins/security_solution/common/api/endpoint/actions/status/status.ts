@@ -6,12 +6,16 @@
  */
 
 import { schema } from '@kbn/config-schema';
+import { MAX_ID_LENGTH } from '../../../../endpoint/schema/schema_bounds_constants';
 
 export const ActionStatusRequestSchema = {
   query: schema.object({
     agent_ids: schema.oneOf([
-      schema.arrayOf(schema.string({ minLength: 1 }), { minSize: 1, maxSize: 50 }),
-      schema.string({ minLength: 1 }),
+      schema.arrayOf(schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }), {
+        minSize: 1,
+        maxSize: 50,
+      }),
+      schema.string({ minLength: 1, maxLength: MAX_ID_LENGTH }),
     ]),
   }),
 };

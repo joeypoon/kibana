@@ -43,31 +43,31 @@ export const GetEndpointActionListResponse = lazySchema(() =>
     /**
      * The start date filter applied to the query.
      */
-    startDate: z.string().optional(),
+    startDate: z.string().max(64).optional(),
     /**
      * The end date filter applied to the query.
      */
-    endDate: z.string().optional(),
+    endDate: z.string().max(64).optional(),
     /**
      * The list of agent types the query was filtered by.
      */
-    agentTypes: z.array(z.string()).optional(),
+    agentTypes: z.array(z.string().max(64)).max(10).optional(),
     /**
      * The list of elastic agent IDs the query was filtered by.
      */
-    elasticAgentIds: z.array(z.string()).optional(),
+    elasticAgentIds: z.array(z.string().max(128)).max(250).optional(),
     /**
      * The list of user IDs the query was filtered by.
      */
-    userIds: z.array(z.string()).optional(),
+    userIds: z.array(z.string().max(1024)).max(50).optional(),
     /**
      * The list of commands the query was filtered by.
      */
-    commands: z.array(z.string()).optional(),
+    commands: z.array(z.string().max(64)).max(50).optional(),
     /**
      * The list of statuses the query was filtered by.
      */
-    statuses: z.array(z.string()).optional(),
+    statuses: z.array(z.string().max(64)).max(10).optional(),
     /**
      * The total number of response actions matching the query.
      */

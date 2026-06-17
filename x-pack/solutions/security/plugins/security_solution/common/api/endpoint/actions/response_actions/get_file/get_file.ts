@@ -7,6 +7,7 @@
 
 import type { TypeOf } from '@kbn/config-schema';
 import { schema } from '@kbn/config-schema';
+import { MAX_FILE_PATH_LENGTH } from '../../../../../endpoint/schema/schema_bounds_constants';
 import { BaseActionRequestSchema } from '../../common/base';
 
 export const EndpointActionGetFileSchema = {
@@ -14,7 +15,7 @@ export const EndpointActionGetFileSchema = {
     ...BaseActionRequestSchema,
 
     parameters: schema.object({
-      path: schema.string({ minLength: 1 }),
+      path: schema.string({ minLength: 1, maxLength: MAX_FILE_PATH_LENGTH }),
     }),
   }),
 };

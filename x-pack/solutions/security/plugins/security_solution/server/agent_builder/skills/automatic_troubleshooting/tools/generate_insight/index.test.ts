@@ -13,6 +13,12 @@ import { InferenceConnectorType } from '@kbn/inference-common';
 import { ToolType } from '@kbn/agent-builder-common';
 import { ToolResultType } from '@kbn/agent-builder-common/tools';
 
+import {
+  MAX_GENERATE_INSIGHT_DATA_ITEMS,
+  MAX_ID_LENGTH,
+  MAX_INSIGHTS_ARRAY_SIZE,
+  MAX_LONG_TEXT_LENGTH,
+} from '../../../../../../common/endpoint/schema/schema_bounds_constants';
 import { GENERATE_INSIGHT_TOOL_ID } from '../..';
 import { createGenerateInsightGraph } from './graph';
 import { generateInsightTool } from '.';
@@ -199,6 +205,134 @@ describe('automaticTroubleshootingGenerateInsightTool', () => {
       };
 
       const result = tool.schema.safeParse(invalidInput);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts problemDescription at the upper bound', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'a'.repeat(MAX_LONG_TEXT_LENGTH),
+        remediation: 'solve the thing',
+        endpointIds: ['endpoint-1'],
+        data: [{ test: 'data' }],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects problemDescription above the upper bound', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'a'.repeat(MAX_LONG_TEXT_LENGTH + 1),
+        remediation: 'solve the thing',
+        endpointIds: ['endpoint-1'],
+        data: [{ test: 'data' }],
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts remediation at the upper bound', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'Test problem',
+        remediation: 'a'.repeat(MAX_LONG_TEXT_LENGTH),
+        endpointIds: ['endpoint-1'],
+        data: [{ test: 'data' }],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects remediation above the upper bound', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'Test problem',
+        remediation: 'a'.repeat(MAX_LONG_TEXT_LENGTH + 1),
+        endpointIds: ['endpoint-1'],
+        data: [{ test: 'data' }],
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts endpointIds items at the upper bound', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'Test problem',
+        remediation: 'solve the thing',
+        endpointIds: ['a'.repeat(MAX_ID_LENGTH)],
+        data: [{ test: 'data' }],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects endpointIds items above the upper bound', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'Test problem',
+        remediation: 'solve the thing',
+        endpointIds: ['a'.repeat(MAX_ID_LENGTH + 1)],
+        data: [{ test: 'data' }],
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts up to 50 endpointIds', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'Test problem',
+        remediation: 'solve the thing',
+        endpointIds: Array.from(
+          { length: MAX_INSIGHTS_ARRAY_SIZE },
+          (_, index) => `endpoint-${index}`
+        ),
+        data: [{ test: 'data' }],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects more than 50 endpointIds', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'Test problem',
+        remediation: 'solve the thing',
+        endpointIds: Array.from({ length: 51 }, (_, index) => `endpoint-${index}`),
+        data: [{ test: 'data' }],
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts up to 50 data items', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'Test problem',
+        remediation: 'solve the thing',
+        endpointIds: ['endpoint-1'],
+        data: Array.from({ length: MAX_GENERATE_INSIGHT_DATA_ITEMS }, (_, index) => ({
+          item: index,
+        })),
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects more than 50 data items', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'Test problem',
+        remediation: 'solve the thing',
+        endpointIds: ['endpoint-1'],
+        data: Array.from({ length: MAX_GENERATE_INSIGHT_DATA_ITEMS + 1 }, (_, index) => ({
+          item: index,
+        })),
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects serialized data payload larger than 100000 characters', () => {
+      const result = tool.schema.safeParse({
+        problemDescription: 'Test problem',
+        remediation: 'solve the thing',
+        endpointIds: ['endpoint-1'],
+        data: [{ blob: 'a'.repeat(100_001) }],
+      });
 
       expect(result.success).toBe(false);
     });

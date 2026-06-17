@@ -6,9 +6,10 @@
  */
 
 import { schema } from '@kbn/config-schema';
+import { MAX_ID_LENGTH } from '../../../../endpoint/schema/schema_bounds_constants';
 
 export const ActionDetailsRequestSchema = {
   params: schema.object({
-    action_id: schema.string(),
+    action_id: schema.string({ maxLength: MAX_ID_LENGTH }),
   }),
 };

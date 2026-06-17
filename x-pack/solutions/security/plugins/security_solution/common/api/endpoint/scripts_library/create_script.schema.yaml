@@ -75,10 +75,12 @@ components:
       properties:
         name:
           type: string
+          maxLength: 256
           description: Name of the script
         platform:
           type: array
-          description: Platforms supported by the the script
+          description: Platforms supported by the script
+          maxItems: 3
           items:
             $ref: './common.yaml#/components/schemas/EndpointScriptPlatform'
         file:
@@ -91,17 +93,21 @@ components:
           $ref: "./common.yaml#/components/schemas/ArchivePathToExecutableSchema"
         tags:
           type: array
+          maxItems: 50
           description: Tags to categorize the script
           items:
             $ref: './common.yaml#/components/schemas/EndpointScriptTags'
         description:
           type: string
+          maxLength: 10000
           description: Description of the script and its purpose/functionality
         instructions:
           type: string
+          maxLength: 10000
           description: Instructions for using the script, including details around its supported input arguments
         example:
           type: string
+          maxLength: 10000
           description: Example usage of the script
         requiresInput:
           type: boolean

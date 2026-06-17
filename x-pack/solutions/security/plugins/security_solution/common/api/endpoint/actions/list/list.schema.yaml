@@ -125,35 +125,47 @@ components:
           description: The number of items per page.
         startDate:
           type: string
+          maxLength: 64
           description: The start date filter applied to the query.
         endDate:
           type: string
+          maxLength: 64
           description: The end date filter applied to the query.
         agentTypes:
           type: array
           description: The list of agent types the query was filtered by.
+          maxItems: 10
           items:
             type: string
+            maxLength: 64
         elasticAgentIds:
           type: array
           description: The list of elastic agent IDs the query was filtered by.
+          maxItems: 250
           items:
             type: string
+            maxLength: 128
         userIds:
           type: array
           description: The list of user IDs the query was filtered by.
+          maxItems: 50
           items:
             type: string
+            maxLength: 1024
         commands:
           type: array
           description: The list of commands the query was filtered by.
+          maxItems: 50
           items:
             type: string
+            maxLength: 64
         statuses:
           type: array
           description: The list of statuses the query was filtered by.
+          maxItems: 10
           items:
             type: string
+            maxLength: 64
         total:
           type: integer
           description: The total number of response actions matching the query.

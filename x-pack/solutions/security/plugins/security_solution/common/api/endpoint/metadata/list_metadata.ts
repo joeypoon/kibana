@@ -8,6 +8,7 @@
 import type { TypeOf } from '@kbn/config-schema';
 import { schema } from '@kbn/config-schema';
 import { ENDPOINT_DEFAULT_PAGE, ENDPOINT_DEFAULT_PAGE_SIZE } from '../../../endpoint/constants';
+import { MAX_KQL_LENGTH } from '../../../endpoint/schema/schema_bounds_constants';
 import { HostStatus, EndpointSortableField } from '../../../endpoint/types';
 
 export const GetMetadataListRequestSchema = {
@@ -15,7 +16,7 @@ export const GetMetadataListRequestSchema = {
     {
       page: schema.number({ defaultValue: ENDPOINT_DEFAULT_PAGE, min: 0 }),
       pageSize: schema.number({ defaultValue: ENDPOINT_DEFAULT_PAGE_SIZE, min: 1, max: 10000 }),
-      kuery: schema.maybe(schema.string()),
+      kuery: schema.maybe(schema.string({ maxLength: MAX_KQL_LENGTH })),
       sortField: schema.maybe(
         schema.oneOf([
           schema.literal(EndpointSortableField.ENROLLED_AT.toString()),

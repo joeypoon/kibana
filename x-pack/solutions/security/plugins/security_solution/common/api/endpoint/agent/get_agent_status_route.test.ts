@@ -6,6 +6,7 @@
  */
 
 import { EndpointAgentStatusRequestSchema } from './get_agent_status_route';
+import { MAX_ID_LENGTH } from '../../../endpoint/schema/schema_bounds_constants';
 
 describe('Agent status api route schema', () => {
   it('should optionally accept `agentType`', () => {
@@ -48,6 +49,22 @@ describe('Agent status api route schema', () => {
     expect(() =>
       EndpointAgentStatusRequestSchema.query.validate({
         agentIds: agentIdsValue,
+      })
+    ).not.toThrow();
+  });
+
+  it('should error if an `agentIds` value exceeds the max length', () => {
+    expect(() =>
+      EndpointAgentStatusRequestSchema.query.validate({
+        agentIds: 'a'.repeat(MAX_ID_LENGTH + 1),
+      })
+    ).toThrow(/\[agentIds]:/);
+  });
+
+  it('should accept `agentIds` at exactly max length', () => {
+    expect(() =>
+      EndpointAgentStatusRequestSchema.query.validate({
+        agentIds: 'a'.repeat(MAX_ID_LENGTH),
       })
     ).not.toThrow();
   });

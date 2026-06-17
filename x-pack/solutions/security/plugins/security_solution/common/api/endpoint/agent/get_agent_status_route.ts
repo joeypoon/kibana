@@ -7,12 +7,14 @@
 
 import { schema, type TypeOf } from '@kbn/config-schema';
 import { AgentTypeSchemaLiteral } from '..';
+import { MAX_ID_LENGTH } from '../../../endpoint/schema/schema_bounds_constants';
 
 const AgentStatusAgentIdSchema = schema.string({
   minLength: 1,
+  maxLength: MAX_ID_LENGTH,
   validate: (id) => {
     if (id.trim() === '') {
-      return 'actionIds can not be empty strings';
+      return 'agentIds can not be empty strings';
     }
   },
 });

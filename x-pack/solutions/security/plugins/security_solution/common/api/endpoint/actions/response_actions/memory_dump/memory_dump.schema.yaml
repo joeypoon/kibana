@@ -95,6 +95,7 @@ components:
                         - process
                     pid:
                       type: number
+                      minimum: 1
                 - type: object
                   description: Dump the entire memory of a process using the entity ID.
                   required:
@@ -107,4 +108,6 @@ components:
                         - process
                     entity_id:
                       type: string
+                      minLength: 1
+                      maxLength: 512
 

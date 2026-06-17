@@ -7,6 +7,7 @@
 
 import type { TypeOf } from '@kbn/config-schema';
 import { schema } from '@kbn/config-schema';
+import { MAX_FILE_PATH_LENGTH } from '../../../../../endpoint/schema/schema_bounds_constants';
 import { BaseActionRequestSchema } from '../../common/base';
 
 export const ScanActionRequestSchema = {
@@ -16,6 +17,7 @@ export const ScanActionRequestSchema = {
     parameters: schema.object({
       path: schema.string({
         minLength: 1,
+        maxLength: MAX_FILE_PATH_LENGTH,
         validate: (value) => {
           if (!value.trim().length) {
             return 'path cannot be an empty string';

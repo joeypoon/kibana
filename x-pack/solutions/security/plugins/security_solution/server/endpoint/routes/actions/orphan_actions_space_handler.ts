@@ -12,6 +12,7 @@ import type { OrphanResponseActionsMetadata } from '../../lib/reference_data';
 import { REF_DATA_KEYS } from '../../lib/reference_data';
 import { errorHandler } from '../error_handler';
 import { ORPHAN_ACTIONS_SPACE_ROUTE } from '../../../../common/endpoint/constants';
+import { MAX_SPACE_ID_LENGTH } from '../../../../common/endpoint/schema/schema_bounds_constants';
 import { withEndpointAuthz } from '../with_endpoint_authz';
 import type { EndpointAppContextService } from '../../endpoint_app_context_services';
 import type {
@@ -144,7 +145,7 @@ export const registerOrphanActionsSpaceRoute = (
 
 export const UpdateOrphanActionsSpaceSchema = {
   body: schema.object({
-    spaceId: schema.string({ minLength: 1, defaultValue: '' }),
+    spaceId: schema.string({ minLength: 1, maxLength: MAX_SPACE_ID_LENGTH, defaultValue: '' }),
   }),
 };
 

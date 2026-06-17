@@ -8,6 +8,7 @@
 import { schema, type TypeOf } from '@kbn/config-schema';
 import { isScriptLibraryKqlFilterValid } from '../../../endpoint/service/script_library/script_library_utils';
 import { ENDPOINT_DEFAULT_PAGE_SIZE } from '../../../endpoint/constants';
+import { MAX_KQL_LENGTH } from '../../../endpoint/schema/schema_bounds_constants';
 import type { DeepMutable } from '../../../endpoint/types';
 
 export const ListScriptsRequestSchema = {
@@ -32,6 +33,7 @@ export const ListScriptsRequestSchema = {
       ),
       kuery: schema.maybe(
         schema.string({
+          maxLength: MAX_KQL_LENGTH,
           validate: (value) => isScriptLibraryKqlFilterValid(value).error,
         })
       ),

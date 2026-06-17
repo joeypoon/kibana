@@ -7,8 +7,11 @@
 
 import { schema, type TypeOf } from '@kbn/config-schema';
 import {
+  ScriptDescriptionSchema,
+  ScriptExampleSchema,
   ScriptFileSchema,
   ScriptFileTypeSchema,
+  ScriptInstructionsSchema,
   ScriptNameSchema,
   ScriptPathToExecutableSchema,
   ScriptPlatformSchema,
@@ -16,6 +19,7 @@ import {
   getScriptsTagSchema,
 } from './common';
 import type { DeepMutable } from '../../../endpoint/types';
+import { MAX_ID_LENGTH } from '../../../endpoint/schema/schema_bounds_constants';
 import { validateNonEmptyString } from '../schema_utils';
 
 export const PatchUpdateScriptRequestSchema = {
@@ -26,9 +30,9 @@ export const PatchUpdateScriptRequestSchema = {
       file: schema.maybe(ScriptFileSchema),
       fileType: schema.maybe(ScriptFileTypeSchema),
       requiresInput: schema.maybe(ScriptRequiresInputSchema),
-      description: schema.maybe(schema.string()),
-      instructions: schema.maybe(schema.string()),
-      example: schema.maybe(schema.string()),
+      description: schema.maybe(ScriptDescriptionSchema),
+      instructions: schema.maybe(ScriptInstructionsSchema),
+      example: schema.maybe(ScriptExampleSchema),
       pathToExecutable: schema.conditional(
         schema.siblingRef('fileType'),
         'archive',
@@ -36,7 +40,13 @@ export const PatchUpdateScriptRequestSchema = {
         schema.never()
       ),
       tags: schema.maybe(getScriptsTagSchema('patch')),
-      version: schema.maybe(schema.string({ minLength: 1, validate: validateNonEmptyString })),
+      version: schema.maybe(
+        schema.string({
+          minLength: 1,
+          maxLength: MAX_ID_LENGTH,
+          validate: validateNonEmptyString,
+        })
+      ),
     },
     {
       validate: ({ version, ...updates }) => {
@@ -47,7 +57,11 @@ export const PatchUpdateScriptRequestSchema = {
     }
   ),
   params: schema.object({
-    script_id: schema.string({ validate: validateNonEmptyString }),
+    script_id: schema.string({
+      minLength: 1,
+      maxLength: MAX_ID_LENGTH,
+      validate: validateNonEmptyString,
+    }),
   }),
 };
 

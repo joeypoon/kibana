@@ -13,6 +13,10 @@ import {
   CreateWorkflowInsightRequestSchema,
   GetPendingInsightsRequestSchema,
 } from './workflow_insights';
+import {
+  MAX_LONG_TEXT_LENGTH,
+  MAX_URL_LENGTH,
+} from '../../../endpoint/schema/schema_bounds_constants';
 
 describe('Workflow Insights', () => {
   describe('GetWorkflowInsightsRequestSchema', () => {
@@ -167,6 +171,20 @@ describe('Workflow Insights', () => {
         expect(() =>
           validateQuery({ query: { actionTypes: Array(21).fill('refreshed') } })
         ).toThrow();
+      });
+    });
+
+    describe('string length bounds', () => {
+      it('should reject ids longer than 128 characters', () => {
+        expect(() => validateQuery({ query: { ids: ['a'.repeat(129)] } })).toThrow();
+      });
+
+      it('should reject size greater than 100', () => {
+        expect(() => validateQuery({ query: { size: 101 } })).toThrow();
+      });
+
+      it('should accept size of 100', () => {
+        expect(() => validateQuery({ query: { size: 100 } })).not.toThrow();
       });
     });
 
@@ -500,6 +518,78 @@ describe('Workflow Insights', () => {
           validateRequest({
             ...baseRequest,
             body: { metadata: { message_variables: Array(51).fill('var') } },
+          })
+        ).toThrow();
+      });
+
+      it('should reject insightId longer than 128 characters', () => {
+        expect(() =>
+          validateRequest({
+            params: { insightId: 'a'.repeat(129) },
+            body: {},
+          })
+        ).toThrow();
+      });
+
+      it('should reject more than 50 metadata notes keys', () => {
+        const notes = Object.fromEntries(
+          Array.from({ length: 51 }, (_, index) => [`note-${index}`, 'value'])
+        );
+        expect(() =>
+          validateRequest({
+            ...baseRequest,
+            body: { metadata: { notes } },
+          })
+        ).toThrow();
+      });
+    });
+
+    describe('long text and link length bounds', () => {
+      const overMaxText = 'a'.repeat(MAX_LONG_TEXT_LENGTH + 1);
+      const overMaxLink = 'l'.repeat(MAX_URL_LENGTH + 1);
+      const baseRequest = {
+        params: { insightId: 'valid-insight-id' },
+        body: { action: { type: 'refreshed' } },
+      };
+
+      it('should reject message over max length', () => {
+        expect(() =>
+          validateRequest({
+            ...baseRequest,
+            body: { ...baseRequest.body, message: overMaxText },
+          })
+        ).toThrow();
+      });
+
+      it('should reject value over max length', () => {
+        expect(() =>
+          validateRequest({
+            ...baseRequest,
+            body: { ...baseRequest.body, value: overMaxText },
+          })
+        ).toThrow();
+      });
+
+      it('should reject remediation.descriptive over max length', () => {
+        expect(() =>
+          validateRequest({
+            ...baseRequest,
+            body: {
+              ...baseRequest.body,
+              remediation: { descriptive: overMaxText },
+            },
+          })
+        ).toThrow();
+      });
+
+      it('should reject remediation.link over max length', () => {
+        expect(() =>
+          validateRequest({
+            ...baseRequest,
+            body: {
+              ...baseRequest.body,
+              remediation: { link: overMaxLink },
+            },
           })
         ).toThrow();
       });
