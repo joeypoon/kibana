@@ -129,6 +129,7 @@ describe('Response actions', () => {
     let licenseService: LicenseService;
     let licenseEmitter: Subject<ILicense>;
     let endpointContext: EndpointAppContext;
+    let routerMock: ReturnType<typeof httpServiceMock.createRouter>;
 
     let callRoute: (
       routePrefix: string,
@@ -144,7 +145,7 @@ describe('Response actions', () => {
 
     beforeEach(() => {
       const startContract = createMockEndpointAppContextServiceStartContract();
-      const routerMock = httpServiceMock.createRouter();
+      routerMock = httpServiceMock.createRouter();
       const mockScopedClient = elasticsearchServiceMock.createScopedClusterClient();
       const mockClusterClient = elasticsearchServiceMock.createClusterClient();
 
@@ -251,6 +252,24 @@ describe('Response actions', () => {
       licenseService.stop();
       licenseEmitter.complete();
       getActionDetailsByIdSpy.mockClear();
+    });
+
+    it('rejects over-limit execute command on registered route request schema', () => {
+      const { versionConfig } = getRegisteredVersionedRouteMock(
+        routerMock,
+        'post',
+        EXECUTE_ROUTE,
+        '2023-10-31'
+      );
+      const bodySchema = versionConfig.validate.request.body;
+      const overLimitCommand = 'a'.repeat(8193);
+
+      expect(() => {
+        bodySchema.validate({
+          endpoint_ids: ['endpoint_id'],
+          parameters: { command: overLimitCommand },
+        });
+      }).toThrow();
     });
 
     it('succeeds when an endpoint ID is provided', async () => {
