@@ -105,9 +105,12 @@ export const ResponseActionDetailsSchema = schema.object(
     hosts: schema.maybe(
       schema.recordOf(
         schema.string(),
-        schema.object({
-          name: schema.maybe(schema.string({ meta: { description: 'The host name' } })),
-        }),
+        schema.object(
+          {
+            name: schema.maybe(schema.string({ meta: { description: 'The host name' } })),
+          },
+          { unknowns: 'allow' }
+        ),
         {
           meta: {
             description:
@@ -119,12 +122,15 @@ export const ResponseActionDetailsSchema = schema.object(
     agentState: schema.maybe(
       schema.recordOf(
         schema.string(),
-        schema.object({
-          isCompleted: schema.maybe(schema.boolean()),
-          wasSuccessful: schema.maybe(schema.boolean()),
-          wasCanceled: schema.maybe(schema.boolean()),
-          completedAt: schema.maybe(schema.string()),
-        }),
+        schema.object(
+          {
+            isCompleted: schema.maybe(schema.boolean()),
+            wasSuccessful: schema.maybe(schema.boolean()),
+            wasCanceled: schema.maybe(schema.boolean()),
+            completedAt: schema.maybe(schema.string()),
+          },
+          { unknowns: 'allow' }
+        ),
         {
           meta: {
             description: 'The state of the response action for each agent ID that it was sent to',
@@ -135,10 +141,13 @@ export const ResponseActionDetailsSchema = schema.object(
     outputs: schema.maybe(
       schema.recordOf(
         schema.string(),
-        schema.object({
-          type: schema.oneOf([schema.literal('json'), schema.literal('text')]),
-          content: schema.oneOf([schema.object({}, { unknowns: 'allow' }), schema.string()]),
-        }),
+        schema.object(
+          {
+            type: schema.oneOf([schema.literal('json'), schema.literal('text')]),
+            content: schema.oneOf([schema.object({}, { unknowns: 'allow' }), schema.string()]),
+          },
+          { unknowns: 'allow' }
+        ),
         {
           meta: {
             description:
@@ -148,7 +157,10 @@ export const ResponseActionDetailsSchema = schema.object(
       )
     ),
   },
-  { meta: { id: 'ResponseActionDetails' } }
+  // Allow unknowns: the handler returns the full ActionDetails (errors, comment, …)
+  // which is a superset of the documented fields; strict validation would 500 in
+  // dev-mode response validation. Matches the hand-written schema (no additionalProperties:false).
+  { unknowns: 'allow', meta: { id: 'ResponseActionDetails' } }
 );
 
 /**
@@ -163,7 +175,7 @@ export const ResponseActionCreateSuccessResponseSchema = schema.object(
   {
     data: schema.maybe(ResponseActionDetailsSchema),
   },
-  { meta: { id: 'ResponseActionCreateSuccessResponse' } }
+  { unknowns: 'allow', meta: { id: 'ResponseActionCreateSuccessResponse' } }
 );
 
 /**
@@ -177,5 +189,5 @@ export const ResponseActionIsolationSuccessResponseSchema = schema.object(
     ),
     data: schema.maybe(ResponseActionDetailsSchema),
   },
-  { meta: { id: 'ResponseActionIsolationSuccessResponse' } }
+  { unknowns: 'allow', meta: { id: 'ResponseActionIsolationSuccessResponse' } }
 );
