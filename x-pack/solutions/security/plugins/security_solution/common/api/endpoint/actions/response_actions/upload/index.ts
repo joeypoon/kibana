@@ -6,4 +6,3 @@
  */
 
 export * from './upload';
-export * from './upload.gen';

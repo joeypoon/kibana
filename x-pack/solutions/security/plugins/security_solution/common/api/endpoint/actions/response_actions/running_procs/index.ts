@@ -6,4 +6,3 @@
  */
 
 export * from './running_procs';
-export * from './running_procs.gen';

@@ -19,11 +19,31 @@ export const KillProcessRouteRequestSchema = {
     {
       ...BaseActionRequestSchema,
       parameters: schema.oneOf([
-        schema.object({ pid: schema.number({ min: 1 }) }),
-        schema.object({ entity_id: schema.string({ minLength: 1, maxLength: 256 }) }),
+        schema.object({
+          pid: schema.number({
+            min: 1,
+            meta: { description: 'The process ID (PID) of the process to terminate.' },
+          }),
+        }),
+        schema.object({
+          entity_id: schema.string({
+            minLength: 1,
+            maxLength: 256,
+            meta: { description: 'The entity ID of the process to terminate.' },
+          }),
+        }),
 
         // Process Name currently applies only to SentinelOne (validated below)
-        schema.object({ process_name: schema.string({ minLength: 1, maxLength: 1024 }) }),
+        schema.object({
+          process_name: schema.string({
+            minLength: 1,
+            maxLength: 1024,
+            meta: {
+              description:
+                'The name of the process to terminate. Valid for SentinelOne agent type only.',
+            },
+          }),
+        }),
       ]),
     },
     {

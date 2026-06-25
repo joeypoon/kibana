@@ -14,7 +14,11 @@ export const EndpointActionGetFileSchema = {
     ...BaseActionRequestSchema,
 
     parameters: schema.object({
-      path: schema.string({ minLength: 1, maxLength: 4096 }),
+      path: schema.string({
+        minLength: 1,
+        maxLength: 4096,
+        meta: { description: 'The full file path to retrieve from the endpoint.' },
+      }),
     }),
   }),
 };

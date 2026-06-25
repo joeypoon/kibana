@@ -14,12 +14,20 @@ export const MemoryDumpActionRequestSchema = {
     ...BaseActionRequestSchema,
     parameters: schema.object(
       {
-        type: schema.oneOf([schema.literal('process'), schema.literal('kernel')]),
-        pid: schema.maybe(schema.number({ min: 1 })),
+        type: schema.oneOf([schema.literal('process'), schema.literal('kernel')], {
+          meta: { description: 'The type of memory dump to generate.' },
+        }),
+        pid: schema.maybe(
+          schema.number({
+            min: 1,
+            meta: { description: 'The process ID (PID) to dump (process type only).' },
+          })
+        ),
         entity_id: schema.maybe(
           schema.string({
             minLength: 1,
             maxLength: 256,
+            meta: { description: 'The entity ID of the process to dump (process type only).' },
             validate: (value) => {
               if (!value.trim().length) {
                 return `entity_id cannot be an empty string`;

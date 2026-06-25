@@ -165,3 +165,17 @@ export const ResponseActionCreateSuccessResponseSchema = schema.object(
   },
   { meta: { id: 'ResponseActionCreateSuccessResponse' } }
 );
+
+/**
+ * Success envelope for the (un)isolate routes, which additionally return a top-level
+ * `action` field (a legacy duplicate of `data.id`). Shared by isolate + unisolate.
+ */
+export const ResponseActionIsolationSuccessResponseSchema = schema.object(
+  {
+    action: schema.maybe(
+      schema.string({ meta: { description: 'The action ID (legacy field, same as `data.id`).' } })
+    ),
+    data: schema.maybe(ResponseActionDetailsSchema),
+  },
+  { meta: { id: 'ResponseActionIsolationSuccessResponse' } }
+);

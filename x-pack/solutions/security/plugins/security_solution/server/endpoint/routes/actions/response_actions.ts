@@ -19,6 +19,7 @@ import {
   KillProcessRouteRequestSchema,
   type ResponseActionsRequestBody,
   ResponseActionCreateSuccessResponseSchema,
+  ResponseActionIsolationSuccessResponseSchema,
   ScanActionRequestSchema,
   SuspendProcessRouteRequestSchema,
   UnisolateRouteRequestSchema,
@@ -65,6 +66,20 @@ import {
   buildResponseActionResult,
   createCancelActionAdditionalChecks,
 } from './utils';
+import {
+  scanActionOas,
+  isolateActionOas,
+  unisolateActionOas,
+  killProcessActionOas,
+  suspendProcessActionOas,
+  getProcessesActionOas,
+  getFileActionOas,
+  executeActionOas,
+  uploadActionOas,
+  runScriptActionOas,
+  cancelActionOas,
+  memoryDumpActionOas,
+} from './response_actions_oas';
 
 export function registerResponseActionRoutes(
   router: SecuritySolutionPluginRouter,
@@ -81,12 +96,24 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Isolate an endpoint',
+      description:
+        "Isolate an endpoint from the network. The endpoint remains isolated until it's released.",
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: IsolateRouteRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionIsolationSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: isolateActionOas,
         },
       },
       withEndpointAuthz(
@@ -105,12 +132,23 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Release an isolated endpoint',
+      description: 'Release an isolated endpoint, allowing it to rejoin a network.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: UnisolateRouteRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionIsolationSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: unisolateActionOas,
         },
       },
       withEndpointAuthz(
@@ -129,12 +167,23 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Terminate a process',
+      description: 'Terminate a running process on an endpoint.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: KillProcessRouteRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: killProcessActionOas,
         },
       },
       withEndpointAuthz(
@@ -156,12 +205,23 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Suspend a process',
+      description: 'Suspend a running process on an endpoint.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: SuspendProcessRouteRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: suspendProcessActionOas,
         },
       },
       withEndpointAuthz(
@@ -183,12 +243,23 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Get running processes',
+      description: 'Get a list of all processes running on an endpoint.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: GetProcessesRouteRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: getProcessesActionOas,
         },
       },
       withEndpointAuthz(
@@ -207,12 +278,23 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Get a file',
+      description: 'Get a file from an endpoint.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: EndpointActionGetFileSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: getFileActionOas,
         },
       },
       withEndpointAuthz(
@@ -231,12 +313,23 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Run a command',
+      description: 'Run a shell command on an endpoint.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: ExecuteActionRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: executeActionOas,
         },
       },
       withEndpointAuthz(
@@ -262,12 +355,23 @@ export function registerResponseActionRoutes(
           maxBytes: endpointContext.serverConfig.maxUploadResponseActionFileBytes,
         },
       },
+      summary: 'Upload a file',
+      description: 'Upload a file to an endpoint.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: UploadActionRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: uploadActionOas,
         },
       },
       withEndpointAuthz(
@@ -302,66 +406,7 @@ export function registerResponseActionRoutes(
           },
         },
         options: {
-          // Carries the bits OpenAPI expresses but config-schema cannot: the curated
-          // `operationId` (pinned so generated client SDKs stay stable) and request/
-          // response examples. The schemas themselves come from the config-schema above.
-          oasOperationObject: () => ({
-            operationId: 'EndpointScanAction',
-            requestBody: {
-              content: {
-                'application/json': {
-                  examples: {
-                    scanFile: {
-                      summary: 'Scan a file on an endpoint',
-                      value: {
-                        endpoint_ids: ['ed518850-681a-4d60-bb98-e22640cae2a8'],
-                        parameters: { path: '/usr/my-file.txt' },
-                        comment: 'Scan the file for malware',
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            responses: {
-              200: {
-                content: {
-                  'application/json': {
-                    examples: {
-                      ScanSuccess: {
-                        summary: 'Scan action successfully created',
-                        value: {
-                          data: {
-                            id: '27ba1b42-7cc6-4e53-86ce-675c876092b2',
-                            agents: ['ed518850-681a-4d60-bb98-e22640cae2a8'],
-                            command: 'scan',
-                            agentType: 'endpoint',
-                            isExpired: false,
-                            isCompleted: false,
-                            wasSuccessful: false,
-                            status: 'pending',
-                            startedAt: '2023-07-28T19:00:03.911Z',
-                            createdBy: 'elastic',
-                            hosts: {
-                              'ed518850-681a-4d60-bb98-e22640cae2a8': { name: 'gke-node-1235412' },
-                            },
-                            agentState: {
-                              'ed518850-681a-4d60-bb98-e22640cae2a8': {
-                                isCompleted: false,
-                                wasSuccessful: false,
-                              },
-                            },
-                            parameters: { path: '/usr/my-file.txt' },
-                            outputs: {},
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          }),
+          oasOperationObject: scanActionOas,
         },
       },
       withEndpointAuthz(
@@ -379,12 +424,23 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Run a script',
+      description: 'Run a script on a host. Currently supported only for some agent types.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: RunScriptActionRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: runScriptActionOas,
         },
       },
       withEndpointAuthz(
@@ -406,12 +462,24 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Cancel a response action',
+      description:
+        'Cancel a running or pending response action (Applies only to some agent types).',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: CancelActionRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: cancelActionOas,
         },
       },
       withEndpointAuthz(
@@ -430,12 +498,23 @@ export function registerResponseActionRoutes(
         authz: { requiredPrivileges: ['securitySolution'] },
         authc: { enabled: true },
       },
+      summary: 'Generate a memory dump from the host machine',
+      description: 'Generates memory dumps on the targeted host.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: MemoryDumpActionRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: memoryDumpActionOas,
         },
       },
       withEndpointAuthz(

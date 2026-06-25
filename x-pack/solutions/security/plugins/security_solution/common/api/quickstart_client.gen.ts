@@ -153,43 +153,6 @@ import type {
   EndpointGetActionsListRequestQueryInput,
   EndpointGetActionsListResponse,
 } from './endpoint/actions/list/list.gen';
-import type {
-  CancelActionRequestBodyInput,
-  CancelActionResponse,
-} from './endpoint/actions/response_actions/cancel/cancel.gen';
-import type {
-  EndpointExecuteActionRequestBodyInput,
-  EndpointExecuteActionResponse,
-} from './endpoint/actions/response_actions/execute/execute.gen';
-import type {
-  EndpointGetFileActionRequestBodyInput,
-  EndpointGetFileActionResponse,
-} from './endpoint/actions/response_actions/get_file/get_file.gen';
-import type {
-  EndpointIsolateActionRequestBodyInput,
-  EndpointIsolateActionResponse,
-} from './endpoint/actions/response_actions/isolate/isolate.gen';
-import type {
-  EndpointKillProcessActionRequestBodyInput,
-  EndpointKillProcessActionResponse,
-} from './endpoint/actions/response_actions/kill_process/kill_process.gen';
-import type {
-  RunScriptActionRequestBodyInput,
-  RunScriptActionResponse,
-} from './endpoint/actions/response_actions/run_script/run_script.gen';
-import type {
-  EndpointGetProcessesActionRequestBodyInput,
-  EndpointGetProcessesActionResponse,
-} from './endpoint/actions/response_actions/running_procs/running_procs.gen';
-import type {
-  EndpointSuspendProcessActionRequestBodyInput,
-  EndpointSuspendProcessActionResponse,
-} from './endpoint/actions/response_actions/suspend_process/suspend_process.gen';
-import type {
-  EndpointUnisolateActionRequestBodyInput,
-  EndpointUnisolateActionResponse,
-} from './endpoint/actions/response_actions/unisolate/unisolate.gen';
-import type { EndpointUploadActionResponse } from './endpoint/actions/response_actions/upload/upload.gen';
 import type { EndpointGetActionsStateResponse } from './endpoint/actions/state/state.gen';
 import type {
   EndpointGetActionsStatusRequestQueryInput,
@@ -701,22 +664,6 @@ If asset criticality records already exist for the specified entities, those rec
     return this.kbnClient
       .request<BulkUpsertAssetCriticalityRecordsResponse>({
         path: '/api/asset_criticality/bulk',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Cancel a running or pending response action (Applies only to some agent types).
-   */
-  async cancelAction(props: CancelActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API CancelAction`);
-    return this.kbnClient
-      .request<CancelActionResponse>({
-        path: '/api/endpoint/action/cancel',
         headers: {
           [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
         },
@@ -1428,22 +1375,6 @@ The entity will be immediately deleted from the latest index.  It will remain av
       .catch(catchAxiosErrorFormatAndThrow);
   }
   /**
-   * Run a shell command on an endpoint.
-   */
-  async endpointExecuteAction(props: EndpointExecuteActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointExecuteAction`);
-    return this.kbnClient
-      .request<EndpointExecuteActionResponse>({
-        path: '/api/endpoint/action/execute',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
     * Download a file associated with a response action. Files are downloaded in a password-protected `.zip` archive to prevent the file from running. Use password `elastic` to open the `.zip` in a safe environment.
 > info
 > Files retrieved from third-party-protected hosts require a different password. Refer to [Third-party response actions](https://www.elastic.co/docs/solutions/security/endpoint-response-actions/third-party-response-actions) for your system's password.
@@ -1526,118 +1457,6 @@ The entity will be immediately deleted from the latest index.  It will remain av
         method: 'GET',
 
         query: props.query,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Get a file from an endpoint.
-   */
-  async endpointGetFileAction(props: EndpointGetFileActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointGetFileAction`);
-    return this.kbnClient
-      .request<EndpointGetFileActionResponse>({
-        path: '/api/endpoint/action/get_file',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Get a list of all processes running on an endpoint.
-   */
-  async endpointGetProcessesAction(props: EndpointGetProcessesActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointGetProcessesAction`);
-    return this.kbnClient
-      .request<EndpointGetProcessesActionResponse>({
-        path: '/api/endpoint/action/running_procs',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Isolate an endpoint from the network. The endpoint remains isolated until it's released.
-   */
-  async endpointIsolateAction(props: EndpointIsolateActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointIsolateAction`);
-    return this.kbnClient
-      .request<EndpointIsolateActionResponse>({
-        path: '/api/endpoint/action/isolate',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Terminate a running process on an endpoint.
-   */
-  async endpointKillProcessAction(props: EndpointKillProcessActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointKillProcessAction`);
-    return this.kbnClient
-      .request<EndpointKillProcessActionResponse>({
-        path: '/api/endpoint/action/kill_process',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Suspend a running process on an endpoint.
-   */
-  async endpointSuspendProcessAction(props: EndpointSuspendProcessActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointSuspendProcessAction`);
-    return this.kbnClient
-      .request<EndpointSuspendProcessActionResponse>({
-        path: '/api/endpoint/action/suspend_process',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Release an isolated endpoint, allowing it to rejoin a network.
-   */
-  async endpointUnisolateAction(props: EndpointUnisolateActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointUnisolateAction`);
-    return this.kbnClient
-      .request<EndpointUnisolateActionResponse>({
-        path: '/api/endpoint/action/unisolate',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Upload a file to an endpoint.
-   */
-  async endpointUploadAction(props: EndpointUploadActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointUploadAction`);
-    return this.kbnClient
-      .request<EndpointUploadActionResponse>({
-        path: '/api/endpoint/action/upload',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.attachment,
       })
       .catch(catchAxiosErrorFormatAndThrow);
   }
@@ -3238,22 +3057,6 @@ matching documents, and inspect execution logs. Pair `invocationCount` and `time
       .catch(catchAxiosErrorFormatAndThrow);
   }
   /**
-   * Run a script on a host. Currently supported only for some agent types.
-   */
-  async runScriptAction(props: RunScriptActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API RunScriptAction`);
-    return this.kbnClient
-      .request<RunScriptActionResponse>({
-        path: '/api/endpoint/action/run_script',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
    * Schedules the Privilege Monitoring Engine to run as soon as possible, triggering an immediate monitoring cycle.
    */
   async scheduleMonitoringEngine() {
@@ -3922,9 +3725,6 @@ export interface AssignWatchlistEntitiesProps {
 export interface BulkUpsertAssetCriticalityRecordsProps {
   body: BulkUpsertAssetCriticalityRecordsRequestBodyInput;
 }
-export interface CancelActionProps {
-  body: CancelActionRequestBodyInput;
-}
 export interface CleanDraftTimelinesProps {
   body: CleanDraftTimelinesRequestBodyInput;
 }
@@ -4032,9 +3832,6 @@ export interface DeleteWatchlistEntitySourceProps {
 export interface DeprecatedTriggerRiskScoreCalculationProps {
   body: DeprecatedTriggerRiskScoreCalculationRequestBodyInput;
 }
-export interface EndpointExecuteActionProps {
-  body: EndpointExecuteActionRequestBodyInput;
-}
 export interface EndpointFileDownloadProps {
   params: EndpointFileDownloadRequestParamsInput;
 }
@@ -4046,27 +3843,6 @@ export interface EndpointGetActionsListProps {
 }
 export interface EndpointGetActionsStatusProps {
   query: EndpointGetActionsStatusRequestQueryInput;
-}
-export interface EndpointGetFileActionProps {
-  body: EndpointGetFileActionRequestBodyInput;
-}
-export interface EndpointGetProcessesActionProps {
-  body: EndpointGetProcessesActionRequestBodyInput;
-}
-export interface EndpointIsolateActionProps {
-  body: EndpointIsolateActionRequestBodyInput;
-}
-export interface EndpointKillProcessActionProps {
-  body: EndpointKillProcessActionRequestBodyInput;
-}
-export interface EndpointSuspendProcessActionProps {
-  body: EndpointSuspendProcessActionRequestBodyInput;
-}
-export interface EndpointUnisolateActionProps {
-  body: EndpointUnisolateActionRequestBodyInput;
-}
-export interface EndpointUploadActionProps {
-  attachment: FormData;
 }
 export interface EntityDetailsHighlightsProps {
   body: EntityDetailsHighlightsRequestBodyInput;
@@ -4284,9 +4060,6 @@ export interface RuleMigrationEnhanceRuleProps {
 export interface RulePreviewProps {
   query: RulePreviewRequestQueryInput;
   body: RulePreviewRequestBodyInput;
-}
-export interface RunScriptActionProps {
-  body: RunScriptActionRequestBodyInput;
 }
 export interface ScheduleRiskEngineNowProps {
   body: ScheduleRiskEngineNowRequestBodyInput;

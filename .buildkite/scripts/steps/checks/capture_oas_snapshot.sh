@@ -25,7 +25,18 @@ cmd="node scripts/capture_oas_snapshot\
   --include-path /api/visualizations \
   --include-path /api/tags \
   --include-path /api/security/entity_store \
-  --include-path /api/endpoint/action/scan"
+  --include-path /api/endpoint/action/isolate \
+  --include-path /api/endpoint/action/unisolate \
+  --include-path /api/endpoint/action/kill_process \
+  --include-path /api/endpoint/action/suspend_process \
+  --include-path /api/endpoint/action/running_procs \
+  --include-path /api/endpoint/action/get_file \
+  --include-path /api/endpoint/action/execute \
+  --include-path /api/endpoint/action/upload \
+  --include-path /api/endpoint/action/scan \
+  --include-path /api/endpoint/action/run_script \
+  --include-path /api/endpoint/action/cancel \
+  --include-path /api/endpoint/action/memory_dump"
 
 run_check() {
   eval "$cmd"

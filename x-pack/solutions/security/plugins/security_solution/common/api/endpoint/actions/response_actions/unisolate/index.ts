@@ -6,4 +6,3 @@
  */
 
 export * from './unisolate';
-export * from './unisolate.gen';

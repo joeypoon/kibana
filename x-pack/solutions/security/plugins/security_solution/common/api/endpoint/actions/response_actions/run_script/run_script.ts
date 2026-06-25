@@ -11,10 +11,11 @@ import { BaseActionRequestSchema } from '../../common/base';
 import type { DeepMutable } from '../../../../../endpoint/types';
 
 const { parameters, ...restBaseSchema } = BaseActionRequestSchema;
-const getNonEmptyString = (fieldName: string, maxLength: number) =>
+const getNonEmptyString = (fieldName: string, maxLength: number, description?: string) =>
   schema.string({
     minLength: 1,
     maxLength,
+    ...(description ? { meta: { description } } : {}),
     validate: (value) => {
       if (!value.trim().length) {
         return `${fieldName} cannot be an empty string`;
@@ -28,23 +29,29 @@ const CrowdStrikeRunScriptActionRequestParamsSchema = schema.object(
     /**
      * The script to run
      */
-    raw: schema.maybe(getNonEmptyString('Raw', 65536)),
+    raw: schema.maybe(getNonEmptyString('Raw', 65536, 'Raw script content to run.')),
     /**
      * The path to the script on the host to run
      */
-    hostPath: schema.maybe(getNonEmptyString('HostPath', 4096)),
+    hostPath: schema.maybe(
+      getNonEmptyString('HostPath', 4096, 'Absolute path to a script on the host.')
+    ),
     /**
      * The path to the script in the cloud to run
      */
-    cloudFile: schema.maybe(getNonEmptyString('CloudFile', 4096)),
+    cloudFile: schema.maybe(
+      getNonEmptyString('CloudFile', 4096, 'Name of a script from the cloud file library.')
+    ),
     /**
      * The command line to run
      */
-    commandLine: schema.maybe(getNonEmptyString('CommandLine', 8192)),
+    commandLine: schema.maybe(getNonEmptyString('CommandLine', 8192, 'Command line to run.')),
     /**
      * The max timeout value before the command is killed. Number represents milliseconds
      */
-    timeout: schema.maybe(schema.number({ min: 1 })),
+    timeout: schema.maybe(
+      schema.number({ min: 1, meta: { description: 'Timeout for the script execution.' } })
+    ),
   },
   {
     validate: (params) => {
@@ -60,35 +67,39 @@ export const MSDefenderEndpointRunScriptActionRequestParamsSchema = schema.objec
   /**
    * The path to the script in the cloud to run
    */
-  scriptName: getNonEmptyString('ScriptName', 256),
-  args: schema.maybe(getNonEmptyString('Args', 8192)),
+  scriptName: getNonEmptyString('ScriptName', 256, 'The name of the script to run.'),
+  args: schema.maybe(
+    getNonEmptyString('Args', 8192, 'Command-line arguments to pass to the script.')
+  ),
 });
 
 const SentinelOneRunScriptActionRequestParamsSchema = schema.object({
   /**
    * The SentinelOne Script ID to be executed
    */
-  scriptId: getNonEmptyString('scriptId', 256),
+  scriptId: getNonEmptyString('scriptId', 256, 'The ID of the script to run.'),
   /**
    * Any input arguments for the selected script
    */
-  scriptInput: schema.maybe(getNonEmptyString('scriptInput', 8192)),
+  scriptInput: schema.maybe(getNonEmptyString('scriptInput', 8192, 'Script arguments/input.')),
 });
 
 const EndpointRunScriptActionRequestParamsSchema = schema.object({
   /**
    * The Script ID to be executed on the host (from the scripts library)
    */
-  scriptId: getNonEmptyString('scriptId', 256),
+  scriptId: getNonEmptyString('scriptId', 256, 'The ID of the script to run.'),
   /**
    * Any input arguments for the selected script
    */
-  scriptInput: schema.maybe(getNonEmptyString('scriptInput', 8192)),
+  scriptInput: schema.maybe(getNonEmptyString('scriptInput', 8192, 'Script arguments/input.')),
 
   /**
    * Timeout for executing the script on the host. Value should be in **seconds**.
    */
-  timeout: schema.maybe(schema.number({ min: 1 })),
+  timeout: schema.maybe(
+    schema.number({ min: 1, meta: { description: 'Timeout for the script execution.' } })
+  ),
 });
 
 export const RunScriptActionRequestSchema = {

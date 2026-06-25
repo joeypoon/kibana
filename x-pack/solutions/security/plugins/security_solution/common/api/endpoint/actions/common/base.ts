@@ -35,6 +35,9 @@ export const BaseActionRequestSchema = {
   endpoint_ids: schema.arrayOf(schema.string({ minLength: 1, maxLength: 256 }), {
     minSize: 1,
     maxSize: 250,
+    meta: {
+      description: 'List of endpoint IDs (cannot contain empty strings). Max of 250.',
+    },
     validate: (endpointIds) => {
       if (endpointIds.map((v) => v.trim()).some((v) => !v.length)) {
         return 'endpoint_ids cannot contain empty strings';
@@ -46,6 +49,10 @@ export const BaseActionRequestSchema = {
     schema.arrayOf(schema.string({ minLength: 1, maxLength: 256 }), {
       minSize: 1,
       maxSize: 50,
+      meta: {
+        description:
+          'If this action is associated with any alerts, they can be specified here. The action will be logged in any cases associated with the specified alerts. Max of 50.',
+      },
       validate: (alertIds) => {
         if (alertIds.map((v) => v.trim()).some((v) => !v.length)) {
           return 'alert_ids cannot contain empty strings';
@@ -58,6 +65,9 @@ export const BaseActionRequestSchema = {
     schema.arrayOf(schema.string({ minLength: 1, maxLength: 256 }), {
       minSize: 1,
       maxSize: 50,
+      meta: {
+        description: 'The IDs of cases where the action taken will be logged. Max of 50.',
+      },
       validate: (caseIds) => {
         if (caseIds.map((v) => v.trim()).some((v) => !v.length)) {
           return 'case_ids cannot contain empty strings';
@@ -65,13 +75,18 @@ export const BaseActionRequestSchema = {
       },
     })
   ),
-  comment: schema.maybe(schema.string({ maxLength: MAX_COMMENT_LENGTH })),
+  comment: schema.maybe(
+    schema.string({ maxLength: MAX_COMMENT_LENGTH, meta: { description: 'Optional comment' } })
+  ),
   parameters: schema.maybe(schema.object({})),
   agent_type: schema.maybe(
     schema.oneOf(
       // @ts-expect-error TS2769: No overload matches this call
       AgentTypeSchemaLiteral,
-      { defaultValue: 'endpoint' }
+      {
+        defaultValue: 'endpoint',
+        meta: { description: 'List of agent types to retrieve. Defaults to `endpoint`.' },
+      }
     )
   ),
 };

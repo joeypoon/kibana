@@ -14,10 +14,15 @@ export const UploadActionRequestSchema = {
     ...BaseActionRequestSchema,
 
     parameters: schema.object({
-      overwrite: schema.maybe(schema.boolean({ defaultValue: false })),
+      overwrite: schema.maybe(
+        schema.boolean({
+          defaultValue: false,
+          meta: { description: 'Overwrite the file on the host if it already exists.' },
+        })
+      ),
     }),
 
-    file: schema.stream(),
+    file: schema.stream({ meta: { description: 'The binary content of the file.' } }),
   }),
 };
 

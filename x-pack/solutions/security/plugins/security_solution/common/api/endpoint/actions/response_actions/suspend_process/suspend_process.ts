@@ -13,8 +13,19 @@ export const SuspendProcessRouteRequestSchema = {
   body: schema.object({
     ...BaseActionRequestSchema,
     parameters: schema.oneOf([
-      schema.object({ pid: schema.number({ min: 1 }) }),
-      schema.object({ entity_id: schema.string({ minLength: 1, maxLength: 256 }) }),
+      schema.object({
+        pid: schema.number({
+          min: 1,
+          meta: { description: 'The process ID (PID) of the process to suspend.' },
+        }),
+      }),
+      schema.object({
+        entity_id: schema.string({
+          minLength: 1,
+          maxLength: 256,
+          meta: { description: 'The entity ID of the process to suspend.' },
+        }),
+      }),
     ]),
   }),
 };

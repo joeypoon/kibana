@@ -6,4 +6,3 @@
  */
 
 export * from './suspend_process';
-export * from './suspend_process.gen';

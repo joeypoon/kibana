@@ -5,4 +5,3 @@
  * 2.0.
  */
 export * from './kill_process';
-export * from './kill_process.gen';

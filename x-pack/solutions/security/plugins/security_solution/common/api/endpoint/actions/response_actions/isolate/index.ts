@@ -6,4 +6,3 @@
  */
 
 export * from './isolate';
-export * from './isolate.gen';

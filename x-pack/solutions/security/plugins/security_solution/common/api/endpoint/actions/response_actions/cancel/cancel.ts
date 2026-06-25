@@ -14,6 +14,7 @@ const IdParameterSchema = {
   id: schema.string({
     minLength: 1,
     maxLength: 50,
+    meta: { description: 'ID of the response action to cancel.' },
     validate: validateNonEmptyString,
   }),
 };
