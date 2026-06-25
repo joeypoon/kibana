@@ -6,4 +6,3 @@
  */
 
 export * from './file_download';
-export * from './file_download.gen';

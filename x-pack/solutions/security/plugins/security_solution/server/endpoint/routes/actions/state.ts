@@ -6,6 +6,7 @@
  */
 
 import { uniq } from 'lodash/fp';
+import { schema } from '@kbn/config-schema';
 import type { RequestHandler } from '@kbn/core/server';
 import { RESPONSE_CONSOLE_ACTION_COMMANDS_TO_REQUIRED_AUTHZ } from '../../../../common/endpoint/service/response_actions/constants';
 import { ACTION_STATE_ROUTE } from '../../../../common/endpoint/constants';
@@ -15,6 +16,22 @@ import type {
 } from '../../../types';
 import type { EndpointAppContext } from '../../types';
 import { withEndpointAuthz } from '../with_endpoint_authz';
+
+const ActionStateResponseSchema = schema.object(
+  {
+    data: schema.object(
+      {
+        canEncrypt: schema.maybe(
+          schema.boolean({
+            meta: { description: 'Whether encryption is enabled for response actions.' },
+          })
+        ),
+      },
+      { unknowns: 'allow' }
+    ),
+  },
+  { unknowns: 'allow', meta: { id: 'ActionStateResponse' } }
+);
 
 /**
  * Registers routes for checking state of actions routes
@@ -32,6 +49,8 @@ export function registerActionStateRoutes(
     .get({
       access: 'public',
       path: ACTION_STATE_ROUTE,
+      summary: 'Get actions state',
+      description: 'Get a response actions state, which reports whether encryption is enabled.',
       security: {
         authz: {
           requiredPrivileges: ['securitySolution'],
@@ -41,7 +60,37 @@ export function registerActionStateRoutes(
     .addVersion(
       {
         version: '2023-10-31',
-        validate: false,
+        validate: {
+          response: {
+            200: {
+              body: () => ActionStateResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: () => ({
+            operationId: 'EndpointGetActionsState',
+            responses: {
+              200: {
+                content: {
+                  'application/json': {
+                    examples: {
+                      actionsState: {
+                        summary: 'Response actions state with encryption enabled',
+                        value: {
+                          data: {
+                            canEncrypt: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+        },
       },
       withEndpointAuthz(
         {

@@ -6,4 +6,3 @@
  */
 
 export * from './file_info';
-export * from './file_info.gen';

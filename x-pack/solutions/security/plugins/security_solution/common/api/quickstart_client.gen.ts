@@ -144,20 +144,6 @@ import type {
   SetUnifiedAlertsWorkflowStatusResponse,
 } from './detection_engine/unified_alerts/set_workflow_status/set_workflow_status_route.gen';
 import type { SuggestUserProfilesRequestQueryInput } from './detection_engine/users/suggest_user_profiles_route.gen';
-import type { EndpointFileDownloadRequestParamsInput } from './endpoint/actions/file_download/file_download.gen';
-import type {
-  EndpointFileInfoRequestParamsInput,
-  EndpointFileInfoResponse,
-} from './endpoint/actions/file_info/file_info.gen';
-import type {
-  EndpointGetActionsListRequestQueryInput,
-  EndpointGetActionsListResponse,
-} from './endpoint/actions/list/list.gen';
-import type { EndpointGetActionsStateResponse } from './endpoint/actions/state/state.gen';
-import type {
-  EndpointGetActionsStatusRequestQueryInput,
-  EndpointGetActionsStatusResponse,
-} from './endpoint/actions/status/status.gen';
 import type { GetEndpointExceptionsPerPolicyOptInResponse } from './endpoint/endpoint_exceptions_per_policy_opt_in/endpoint_exceptions_per_policy_opt_in.gen';
 import type {
   GetEndpointMetadataListRequestQueryInput,
@@ -1371,92 +1357,6 @@ The entity will be immediately deleted from the latest index.  It will remain av
           [ELASTIC_HTTP_VERSION_HEADER]: '1',
         },
         method: 'POST',
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-    * Download a file associated with a response action. Files are downloaded in a password-protected `.zip` archive to prevent the file from running. Use password `elastic` to open the `.zip` in a safe environment.
-> info
-> Files retrieved from third-party-protected hosts require a different password. Refer to [Third-party response actions](https://www.elastic.co/docs/solutions/security/endpoint-response-actions/third-party-response-actions) for your system's password.
-
-    */
-  async endpointFileDownload(props: EndpointFileDownloadProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointFileDownload`);
-    return this.kbnClient
-      .request({
-        path: replaceParams(
-          '/api/endpoint/action/{action_id}/file/{file_id}/download',
-          props.params
-        ),
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'GET',
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-    * Get information for the specified response action file download.
-
-    */
-  async endpointFileInfo(props: EndpointFileInfoProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointFileInfo`);
-    return this.kbnClient
-      .request<EndpointFileInfoResponse>({
-        path: replaceParams('/api/endpoint/action/{action_id}/file/{file_id}', props.params),
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'GET',
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Get a list of all response actions.
-   */
-  async endpointGetActionsList(props: EndpointGetActionsListProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointGetActionsList`);
-    return this.kbnClient
-      .request<EndpointGetActionsListResponse>({
-        path: '/api/endpoint/action',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'GET',
-
-        query: props.query,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Get a response actions state, which reports whether encryption is enabled.
-   */
-  async endpointGetActionsState() {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointGetActionsState`);
-    return this.kbnClient
-      .request<EndpointGetActionsStateResponse>({
-        path: '/api/endpoint/action/state',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'GET',
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Get the status of response actions for the specified agent IDs.
-   */
-  async endpointGetActionsStatus(props: EndpointGetActionsStatusProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointGetActionsStatus`);
-    return this.kbnClient
-      .request<EndpointGetActionsStatusResponse>({
-        path: '/api/endpoint/action_status',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'GET',
-
-        query: props.query,
       })
       .catch(catchAxiosErrorFormatAndThrow);
   }
@@ -3831,18 +3731,6 @@ export interface DeleteWatchlistEntitySourceProps {
 }
 export interface DeprecatedTriggerRiskScoreCalculationProps {
   body: DeprecatedTriggerRiskScoreCalculationRequestBodyInput;
-}
-export interface EndpointFileDownloadProps {
-  params: EndpointFileDownloadRequestParamsInput;
-}
-export interface EndpointFileInfoProps {
-  params: EndpointFileInfoRequestParamsInput;
-}
-export interface EndpointGetActionsListProps {
-  query: EndpointGetActionsListRequestQueryInput;
-}
-export interface EndpointGetActionsStatusProps {
-  query: EndpointGetActionsStatusRequestQueryInput;
 }
 export interface EntityDetailsHighlightsProps {
   body: EntityDetailsHighlightsRequestBodyInput;

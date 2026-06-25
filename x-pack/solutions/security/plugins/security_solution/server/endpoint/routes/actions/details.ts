@@ -7,7 +7,10 @@
 
 import type { RequestHandler } from '@kbn/core/server';
 import type { TypeOf } from '@kbn/config-schema';
-import { ActionDetailsRequestSchema } from '../../../../common/api/endpoint';
+import {
+  ActionDetailsRequestSchema,
+  ActionDetailsResponseSchema,
+} from '../../../../common/api/endpoint';
 import type {
   SecuritySolutionPluginRouter,
   SecuritySolutionRequestHandlerContext,
@@ -32,6 +35,8 @@ export const registerActionDetailsRoutes = (
     .get({
       access: 'public',
       path: ACTION_DETAILS_ROUTE,
+      summary: 'Get action details',
+      description: 'Get the details of a response action using the action ID.',
       security: {
         authz: {
           requiredPrivileges: ['securitySolution'],
@@ -43,6 +48,44 @@ export const registerActionDetailsRoutes = (
         version: '2023-10-31',
         validate: {
           request: ActionDetailsRequestSchema,
+          response: {
+            200: {
+              body: () => ActionDetailsResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: () => ({
+            operationId: 'EndpointGetActionsDetails',
+            responses: {
+              200: {
+                content: {
+                  'application/json': {
+                    examples: {
+                      actionDetails: {
+                        summary: 'Details of an isolate response action',
+                        value: {
+                          data: {
+                            id: '233db9ea-6733-4849-9226-5a7039c7161d',
+                            command: 'isolate',
+                            agentType: 'endpoint',
+                            agents: ['ed518850-681a-4d60-bb98-e22640cae2a8'],
+                            startedAt: '2022-08-08T15:23:37.359Z',
+                            isCompleted: true,
+                            completedAt: '2022-08-08T10:41:57.352Z',
+                            wasSuccessful: true,
+                            isExpired: false,
+                            createdBy: 'elastic',
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
         },
       },
       withEndpointAuthz(

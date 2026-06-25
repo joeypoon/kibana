@@ -28,10 +28,6 @@ import type {
   CreateUpdateProtectionUpdatesNoteRequestBodyInput,
   GetProtectionUpdatesNoteRequestParamsInput,
 } from '@kbn/security-solution-plugin/common/api/endpoint/protection_updates_note/protection_updates_note.gen';
-import type { EndpointFileDownloadRequestParamsInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/file_download/file_download.gen';
-import type { EndpointFileInfoRequestParamsInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/file_info/file_info.gen';
-import type { EndpointGetActionsListRequestQueryInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/list/list.gen';
-import type { EndpointGetActionsStatusRequestQueryInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/status/status.gen';
 import type { GetEndpointMetadataListRequestQueryInput } from '@kbn/security-solution-plugin/common/api/endpoint/metadata/get_metadata.gen';
 import type {
   GetEndpointSuggestionsRequestParamsInput,
@@ -61,72 +57,6 @@ const securitySolutionApiServiceFactory = (supertest: SuperTest.Agent) => ({
       .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
       .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana')
       .send(props.body as object);
-  },
-  /**
-      * Download a file associated with a response action. Files are downloaded in a password-protected `.zip` archive to prevent the file from running. Use password `elastic` to open the `.zip` in a safe environment.
-> info
-> Files retrieved from third-party-protected hosts require a different password. Refer to [Third-party response actions](https://www.elastic.co/docs/solutions/security/endpoint-response-actions/third-party-response-actions) for your system's password.
-
-      */
-  endpointFileDownload(props: EndpointFileDownloadProps, kibanaSpace: string = 'default') {
-    return supertest
-      .get(
-        getRouteUrlForSpace(
-          replaceParams('/api/endpoint/action/{action_id}/file/{file_id}/download', props.params),
-          kibanaSpace
-        )
-      )
-      .set('kbn-xsrf', 'true')
-      .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
-      .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana');
-  },
-  /**
-      * Get information for the specified response action file download.
-
-      */
-  endpointFileInfo(props: EndpointFileInfoProps, kibanaSpace: string = 'default') {
-    return supertest
-      .get(
-        getRouteUrlForSpace(
-          replaceParams('/api/endpoint/action/{action_id}/file/{file_id}', props.params),
-          kibanaSpace
-        )
-      )
-      .set('kbn-xsrf', 'true')
-      .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
-      .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana');
-  },
-  /**
-   * Get a list of all response actions.
-   */
-  endpointGetActionsList(props: EndpointGetActionsListProps, kibanaSpace: string = 'default') {
-    return supertest
-      .get(getRouteUrlForSpace('/api/endpoint/action', kibanaSpace))
-      .set('kbn-xsrf', 'true')
-      .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
-      .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana')
-      .query(props.query);
-  },
-  /**
-   * Get a response actions state, which reports whether encryption is enabled.
-   */
-  endpointGetActionsState(kibanaSpace: string = 'default') {
-    return supertest
-      .get(getRouteUrlForSpace('/api/endpoint/action/state', kibanaSpace))
-      .set('kbn-xsrf', 'true')
-      .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
-      .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana');
-  },
-  /**
-   * Get the status of response actions for the specified agent IDs.
-   */
-  endpointGetActionsStatus(props: EndpointGetActionsStatusProps, kibanaSpace: string = 'default') {
-    return supertest
-      .get(getRouteUrlForSpace('/api/endpoint/action_status', kibanaSpace))
-      .set('kbn-xsrf', 'true')
-      .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
-      .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana')
-      .query(props.query);
   },
   getEndpointExceptionsPerPolicyOptIn(kibanaSpace: string = 'default') {
     return supertest
@@ -223,18 +153,6 @@ export function SecuritySolutionApiProvider({ getService }: FtrProviderContext) 
 export interface CreateUpdateProtectionUpdatesNoteProps {
   params: CreateUpdateProtectionUpdatesNoteRequestParamsInput;
   body: CreateUpdateProtectionUpdatesNoteRequestBodyInput;
-}
-export interface EndpointFileDownloadProps {
-  params: EndpointFileDownloadRequestParamsInput;
-}
-export interface EndpointFileInfoProps {
-  params: EndpointFileInfoRequestParamsInput;
-}
-export interface EndpointGetActionsListProps {
-  query: EndpointGetActionsListRequestQueryInput;
-}
-export interface EndpointGetActionsStatusProps {
-  query: EndpointGetActionsStatusRequestQueryInput;
 }
 export interface GetEndpointMetadataListProps {
   query: GetEndpointMetadataListRequestQueryInput;

@@ -9,7 +9,10 @@ import type { RequestHandler } from '@kbn/core/server';
 import type { TypeOf } from '@kbn/config-schema';
 import { errorHandler } from '../error_handler';
 import { stringify } from '../../utils/stringify';
-import { ActionStatusRequestSchema } from '../../../../common/api/endpoint';
+import {
+  ActionStatusRequestSchema,
+  ActionStatusResponseSchema,
+} from '../../../../common/api/endpoint';
 import { ACTION_STATUS_ROUTE } from '../../../../common/endpoint/constants';
 import type {
   SecuritySolutionPluginRouter,
@@ -31,6 +34,8 @@ export function registerActionStatusRoutes(
     .get({
       access: 'public',
       path: ACTION_STATUS_ROUTE,
+      summary: 'Get response actions status',
+      description: 'Get the status of response actions for the specified agent IDs.',
       security: {
         authz: {
           requiredPrivileges: ['securitySolution'],
@@ -42,6 +47,47 @@ export function registerActionStatusRoutes(
         version: '2023-10-31',
         validate: {
           request: ActionStatusRequestSchema,
+          response: {
+            200: {
+              body: () => ActionStatusResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: () => ({
+            operationId: 'EndpointGetActionsStatus',
+            responses: {
+              200: {
+                content: {
+                  'application/json': {
+                    examples: {
+                      actionStatus: {
+                        summary: 'Pending response actions per agent',
+                        value: {
+                          data: [
+                            {
+                              agent_id: 'afdc366c-e2e0-4cdb-ae1d-94575bd2d8e0',
+                              pending_actions: {
+                                isolate: 0,
+                                unisolate: 0,
+                                'kill-process': 1,
+                                'running-processes': 0,
+                                'get-file': 0,
+                                execute: 0,
+                                upload: 0,
+                                scan: 0,
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
         },
       },
       withEndpointAuthz(

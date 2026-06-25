@@ -43,12 +43,28 @@ export const registerActionFileDownloadRoutes = (
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Download a file',
+      description:
+        "Download a file associated with a response action. Files are downloaded in a password-protected `.zip` archive to prevent the file from running. Use password `elastic` to open the `.zip` in a safe environment.\n> info\n> Files retrieved from third-party-protected hosts require a different password. Refer to [Third-party response actions](https://www.elastic.co/docs/solutions/security/endpoint-response-actions/third-party-response-actions) for your system's password.",
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: EndpointActionFileDownloadSchema,
+        },
+        options: {
+          oasOperationObject: () => ({
+            operationId: 'EndpointFileDownload',
+            responses: {
+              200: {
+                description: 'A password-protected .zip archive containing the file.',
+                content: {
+                  'application/octet-stream': { schema: { type: 'string', format: 'binary' } },
+                },
+              },
+            },
+          }),
         },
       },
       withEndpointAuthz(

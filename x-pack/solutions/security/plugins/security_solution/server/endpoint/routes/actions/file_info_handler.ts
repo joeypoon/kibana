@@ -8,7 +8,10 @@
 import type { RequestHandler } from '@kbn/core/server';
 import { ensureUserHasAuthzToFilesForAction } from './utils';
 import type { EndpointActionFileInfoParams } from '../../../../common/api/endpoint';
-import { EndpointActionFileInfoSchema } from '../../../../common/api/endpoint';
+import {
+  ActionFileInfoResponseSchema,
+  EndpointActionFileInfoSchema,
+} from '../../../../common/api/endpoint';
 import type { ResponseActionsClient } from '../../services';
 import {
   getResponseActionsClient,
@@ -84,12 +87,51 @@ export const registerActionFileInfoRoute = (
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Get file information',
+      description: 'Get information for the specified response action file download.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: EndpointActionFileInfoSchema,
+          response: {
+            200: {
+              body: () => ActionFileInfoResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          oasOperationObject: () => ({
+            operationId: 'EndpointFileInfo',
+            responses: {
+              200: {
+                content: {
+                  'application/json': {
+                    examples: {
+                      fileInfo: {
+                        summary: 'File information for a response action upload',
+                        value: {
+                          data: {
+                            actionId: '233db9ea-6733-4849-9226-5a7039c7161d',
+                            agentId: 'ed518850-681a-4d60-bb98-e22640cae2a8',
+                            id: '233db9ea-6733-4849-9226-5a7039c7161d.ed518850-681a-4d60-bb98-e22640cae2a8',
+                            agentType: 'endpoint',
+                            status: 'READY',
+                            created: '2025-02-26T13:37:30.452Z',
+                            name: 'memory_dump.zip',
+                            size: 1048576,
+                            mimeType: 'application/zip',
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
         },
       },
       withEndpointAuthz(
