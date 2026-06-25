@@ -850,61 +850,6 @@ paths:
       summary: Get running processes
       tags:
         - Security Endpoint Management API
-  /api/endpoint/action/scan:
-    post:
-      description: Scan a specific file or directory on an endpoint for malware.
-      operationId: EndpointScanAction
-      requestBody:
-        content:
-          application/json:
-            examples:
-              scanFile:
-                summary: Scan a file on an endpoint
-                value:
-                  comment: Scan the file for malware
-                  endpoint_ids:
-                    - ed518850-681a-4d60-bb98-e22640cae2a8
-                  parameters:
-                    path: /usr/my-file.txt
-            schema:
-              $ref: '#/components/schemas/ScanRouteRequestBody'
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              examples:
-                ScanSuccess:
-                  summary: Scan action successfully created
-                  value:
-                    data:
-                      agents:
-                        - ed518850-681a-4d60-bb98-e22640cae2a8
-                      agentState:
-                        ed518850-681a-4d60-bb98-e22640cae2a8:
-                          isCompleted: false
-                          wasSuccessful: false
-                      agentType: endpoint
-                      command: scan
-                      createdBy: elastic
-                      hosts:
-                        ed518850-681a-4d60-bb98-e22640cae2a8:
-                          name: gke-node-1235412
-                      id: 27ba1b42-7cc6-4e53-86ce-675c876092b2
-                      isCompleted: false
-                      isExpired: false
-                      outputs: {}
-                      parameters:
-                        path: /usr/my-file.txt
-                      startedAt: '2023-07-28T19:00:03.911Z'
-                      status: pending
-                      wasSuccessful: false
-              schema:
-                $ref: '#/components/schemas/ResponseActionCreateSuccessResponse'
-          description: Indicates a successful call.
-      summary: Scan a file or directory
-      tags:
-        - Security Endpoint Management API
   /api/endpoint/action/state:
     get:
       description: Get a response actions state, which reports whether encryption is
@@ -3445,57 +3390,6 @@ components:
               properties:
                 path:
                   type: string
-    ScanRouteRequestBody:
-      allOf:
-        - type: object
-          properties:
-            agent_type:
-              $ref: '#/components/schemas/AgentTypes'
-            alert_ids:
-              description: If this action is associated with any alerts, they can be specified
-                here. The action will be logged in any cases associated with the
-                specified alerts. Max of 50.
-              example:
-                - alert-id-1
-                - alert-id-2
-              items:
-                minLength: 1
-                type: string
-              maxItems: 50
-              minItems: 1
-              type: array
-            case_ids:
-              description: The IDs of cases where the action taken will be logged. Max of 50.
-              example:
-                - case-id-1
-                - case-id-2
-              items:
-                minLength: 1
-                type: string
-              maxItems: 50
-              minItems: 1
-              type: array
-            comment:
-              $ref: '#/components/schemas/Comment'
-            endpoint_ids:
-              $ref: '#/components/schemas/EndpointIds'
-            parameters:
-              $ref: '#/components/schemas/Parameters'
-          required:
-            - endpoint_ids
-        - type: object
-          properties:
-            parameters:
-              type: object
-              properties:
-                path:
-                  description: The folder or file's full path (including the file name).
-                  example: /usr/my-file.txt
-                  type: string
-              required:
-                - path
-          required:
-            - parameters
     ScriptsApiResponse:
       example:
         data:

@@ -18,6 +18,7 @@ import {
   IsolateRouteRequestSchema,
   KillProcessRouteRequestSchema,
   type ResponseActionsRequestBody,
+  ResponseActionCreateSuccessResponseSchema,
   ScanActionRequestSchema,
   SuspendProcessRouteRequestSchema,
   UnisolateRouteRequestSchema,
@@ -285,12 +286,82 @@ export function registerResponseActionRoutes(
           requiredPrivileges: ['securitySolution'],
         },
       },
+      summary: 'Scan a file or directory',
+      description: 'Scan a specific file or directory on an endpoint for malware.',
     })
     .addVersion(
       {
         version: '2023-10-31',
         validate: {
           request: ScanActionRequestSchema,
+          response: {
+            200: {
+              body: () => ResponseActionCreateSuccessResponseSchema,
+              description: 'Indicates a successful call.',
+            },
+          },
+        },
+        options: {
+          // Carries the bits OpenAPI expresses but config-schema cannot: the curated
+          // `operationId` (pinned so generated client SDKs stay stable) and request/
+          // response examples. The schemas themselves come from the config-schema above.
+          oasOperationObject: () => ({
+            operationId: 'EndpointScanAction',
+            requestBody: {
+              content: {
+                'application/json': {
+                  examples: {
+                    scanFile: {
+                      summary: 'Scan a file on an endpoint',
+                      value: {
+                        endpoint_ids: ['ed518850-681a-4d60-bb98-e22640cae2a8'],
+                        parameters: { path: '/usr/my-file.txt' },
+                        comment: 'Scan the file for malware',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              200: {
+                content: {
+                  'application/json': {
+                    examples: {
+                      ScanSuccess: {
+                        summary: 'Scan action successfully created',
+                        value: {
+                          data: {
+                            id: '27ba1b42-7cc6-4e53-86ce-675c876092b2',
+                            agents: ['ed518850-681a-4d60-bb98-e22640cae2a8'],
+                            command: 'scan',
+                            agentType: 'endpoint',
+                            isExpired: false,
+                            isCompleted: false,
+                            wasSuccessful: false,
+                            status: 'pending',
+                            startedAt: '2023-07-28T19:00:03.911Z',
+                            createdBy: 'elastic',
+                            hosts: {
+                              'ed518850-681a-4d60-bb98-e22640cae2a8': { name: 'gke-node-1235412' },
+                            },
+                            agentState: {
+                              'ed518850-681a-4d60-bb98-e22640cae2a8': {
+                                isCompleted: false,
+                                wasSuccessful: false,
+                              },
+                            },
+                            parameters: { path: '/usr/my-file.txt' },
+                            outputs: {},
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
         },
       },
       withEndpointAuthz(

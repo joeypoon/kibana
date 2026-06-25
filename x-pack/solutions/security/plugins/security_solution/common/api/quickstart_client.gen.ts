@@ -182,10 +182,6 @@ import type {
   EndpointGetProcessesActionResponse,
 } from './endpoint/actions/response_actions/running_procs/running_procs.gen';
 import type {
-  EndpointScanActionRequestBodyInput,
-  EndpointScanActionResponse,
-} from './endpoint/actions/response_actions/scan/scan.gen';
-import type {
   EndpointSuspendProcessActionRequestBodyInput,
   EndpointSuspendProcessActionResponse,
 } from './endpoint/actions/response_actions/suspend_process/suspend_process.gen';
@@ -1589,22 +1585,6 @@ The entity will be immediately deleted from the latest index.  It will remain av
     return this.kbnClient
       .request<EndpointKillProcessActionResponse>({
         path: '/api/endpoint/action/kill_process',
-        headers: {
-          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
-        },
-        method: 'POST',
-        body: props.body,
-      })
-      .catch(catchAxiosErrorFormatAndThrow);
-  }
-  /**
-   * Scan a specific file or directory on an endpoint for malware.
-   */
-  async endpointScanAction(props: EndpointScanActionProps) {
-    this.log.info(`${new Date().toISOString()} Calling API EndpointScanAction`);
-    return this.kbnClient
-      .request<EndpointScanActionResponse>({
-        path: '/api/endpoint/action/scan',
         headers: {
           [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
         },
@@ -4078,9 +4058,6 @@ export interface EndpointIsolateActionProps {
 }
 export interface EndpointKillProcessActionProps {
   body: EndpointKillProcessActionRequestBodyInput;
-}
-export interface EndpointScanActionProps {
-  body: EndpointScanActionRequestBodyInput;
 }
 export interface EndpointSuspendProcessActionProps {
   body: EndpointSuspendProcessActionRequestBodyInput;

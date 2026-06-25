@@ -22,6 +22,9 @@ export const ScanActionRequestSchema = {
             return 'path cannot be an empty string';
           }
         },
+        meta: {
+          description: "The folder or file's full path (including the file name).",
+        },
       }),
     }),
   }),

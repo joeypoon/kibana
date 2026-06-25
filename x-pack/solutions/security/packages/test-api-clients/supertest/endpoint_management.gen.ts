@@ -38,7 +38,6 @@ import type { EndpointGetFileActionRequestBodyInput } from '@kbn/security-soluti
 import type { EndpointGetProcessesActionRequestBodyInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/response_actions/running_procs/running_procs.gen';
 import type { EndpointIsolateActionRequestBodyInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/response_actions/isolate/isolate.gen';
 import type { EndpointKillProcessActionRequestBodyInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/response_actions/kill_process/kill_process.gen';
-import type { EndpointScanActionRequestBodyInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/response_actions/scan/scan.gen';
 import type { EndpointSuspendProcessActionRequestBodyInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/response_actions/suspend_process/suspend_process.gen';
 import type { EndpointUnisolateActionRequestBodyInput } from '@kbn/security-solution-plugin/common/api/endpoint/actions/response_actions/unisolate/unisolate.gen';
 import type { GetEndpointMetadataListRequestQueryInput } from '@kbn/security-solution-plugin/common/api/endpoint/metadata/get_metadata.gen';
@@ -205,17 +204,6 @@ const securitySolutionApiServiceFactory = (supertest: SuperTest.Agent) => ({
   ) {
     return supertest
       .post(getRouteUrlForSpace('/api/endpoint/action/kill_process', kibanaSpace))
-      .set('kbn-xsrf', 'true')
-      .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
-      .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana')
-      .send(props.body as object);
-  },
-  /**
-   * Scan a specific file or directory on an endpoint for malware.
-   */
-  endpointScanAction(props: EndpointScanActionProps, kibanaSpace: string = 'default') {
-    return supertest
-      .post(getRouteUrlForSpace('/api/endpoint/action/scan', kibanaSpace))
       .set('kbn-xsrf', 'true')
       .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
       .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana')
@@ -392,9 +380,6 @@ export interface EndpointIsolateActionProps {
 }
 export interface EndpointKillProcessActionProps {
   body: EndpointKillProcessActionRequestBodyInput;
-}
-export interface EndpointScanActionProps {
-  body: EndpointScanActionRequestBodyInput;
 }
 export interface EndpointSuspendProcessActionProps {
   body: EndpointSuspendProcessActionRequestBodyInput;
