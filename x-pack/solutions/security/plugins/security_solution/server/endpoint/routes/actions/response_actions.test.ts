@@ -22,6 +22,7 @@ import {
   savedObjectsClientMock,
 } from '@kbn/core/server/mocks';
 import type { CasesClientMock } from '@kbn/cases-plugin/server/client/mocks';
+import { isConfigSchema } from '@kbn/config-schema';
 
 import { LicenseService } from '../../../../common/license';
 import {
@@ -261,7 +262,15 @@ describe('Response actions', () => {
         EXECUTE_ROUTE,
         '2023-10-31'
       );
-      const bodySchema = versionConfig.validate.request.body;
+      const { validate } = versionConfig;
+      if (validate === false) {
+        throw new Error('Expected route validation to be defined');
+      }
+      const routeValidation = typeof validate === 'function' ? validate() : validate;
+      const bodySchema = routeValidation.request?.body;
+      if (!bodySchema || !isConfigSchema(bodySchema)) {
+        throw new Error('Expected route validation body schema to be defined');
+      }
       const overLimitCommand = 'a'.repeat(8193);
 
       expect(() => {

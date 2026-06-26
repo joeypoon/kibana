@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import type { TypeOf } from '@kbn/config-schema';
+import type { Type, TypeOf } from '@kbn/config-schema';
 import { schema } from '@kbn/config-schema';
 
 import {
@@ -50,14 +50,16 @@ export const ResponseActionDetailsSchema = schema.object(
   {
     id: schema.maybe(schema.string({ meta: { description: 'The response action ID' } })),
     command: schema.oneOf(
-      // @ts-expect-error TS2769: No overload matches this call
-      RESPONSE_ACTION_API_COMMANDS_NAMES.map((command) => schema.literal(command)),
+      RESPONSE_ACTION_API_COMMANDS_NAMES.map((command) => schema.literal(command)) as [
+        Type<(typeof RESPONSE_ACTION_API_COMMANDS_NAMES)[number]>
+      ],
       { meta: { description: 'The command for the response action' } }
     ),
     agentType: schema.maybe(
       schema.oneOf(
-        // @ts-expect-error TS2769: No overload matches this call
-        RESPONSE_ACTION_AGENT_TYPE.map((agentType) => schema.literal(agentType)),
+        RESPONSE_ACTION_AGENT_TYPE.map((agentType) => schema.literal(agentType)) as [
+          Type<(typeof RESPONSE_ACTION_AGENT_TYPE)[number]>
+        ],
         { meta: { description: 'The type of agent the response action was sent to' } }
       )
     ),
@@ -162,6 +164,8 @@ export const ResponseActionDetailsSchema = schema.object(
   // dev-mode response validation. Matches the hand-written schema (no additionalProperties:false).
   { unknowns: 'allow', meta: { id: 'ResponseActionDetails' } }
 );
+
+export type ResponseActionDetails = TypeOf<typeof ResponseActionDetailsSchema>;
 
 /**
  * The success envelope returned when a response action is created. Shared by all

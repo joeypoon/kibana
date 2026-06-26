@@ -7,6 +7,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { MAX_COMMENT_LENGTH } from '../../constants';
 import {
   RESPONSE_ACTION_AGENT_TYPE,
   RESPONSE_ACTION_API_COMMANDS_NAMES,
@@ -1454,7 +1455,7 @@ describe('actions schemas', () => {
         expect(() => {
           NoParametersRequestSchema.body.validate({
             endpoint_ids: ['endpoint_id'],
-            comment: charsOfLength(30001),
+            comment: charsOfLength(MAX_COMMENT_LENGTH + 1),
           });
         }).toThrow();
       });
@@ -1463,7 +1464,7 @@ describe('actions schemas', () => {
         expect(() => {
           NoParametersRequestSchema.body.validate({
             endpoint_ids: ['endpoint_id'],
-            comment: charsOfLength(30000),
+            comment: charsOfLength(MAX_COMMENT_LENGTH),
           });
         }).not.toThrow();
       });
