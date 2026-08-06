@@ -217,6 +217,7 @@ export const AGENT_BUILDER_BUILTIN_SKILLS = [
   'endpoint-forensic-analysis',
   'investigate-rule',
   'siem-readiness',
+  'elastic-defend-policy-management',
   'attack-discovery-alert-retrieval-builder',
   'attack-discovery-generator',
   'attack-discovery-workflow-troubleshooting',

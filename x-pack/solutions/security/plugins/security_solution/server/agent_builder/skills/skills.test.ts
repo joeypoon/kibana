@@ -10,8 +10,19 @@ import { validateSkillDefinition } from '@kbn/agent-builder-server/skills/type_d
 import { threatHuntingSkill } from './threat_hunting';
 import { alertAnalysisSkill } from './alert_analysis';
 import { alertTriageSkill, ALERT_TRIAGE_TOOL_ID } from './alert_triage';
+import { createElasticDefendPolicyManagementSkill } from './elastic_defend_policy_management';
+import { createDefendPolicyManagementToolMocks } from './elastic_defend_policy_management/lib/test_helpers';
 
-const ALL_SKILLS = [threatHuntingSkill, alertAnalysisSkill, alertTriageSkill];
+const elasticDefendPolicyManagementSkill = createElasticDefendPolicyManagementSkill(
+  createDefendPolicyManagementToolMocks().deps
+);
+
+const ALL_SKILLS = [
+  threatHuntingSkill,
+  alertAnalysisSkill,
+  alertTriageSkill,
+  elasticDefendPolicyManagementSkill,
+];
 
 describe('Security Skills', () => {
   describe('threat-hunting skill', () => {

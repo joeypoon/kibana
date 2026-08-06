@@ -278,6 +278,14 @@ export const allowedExperimentalValues = Object.freeze({
   investigateRuleSkill: false,
 
   /**
+   * Enables the elastic-defend-policy-management Agent Builder skill, which reads, compares, and
+   * advises on Elastic Defend policy configuration. Read-only: it never mutates a policy,
+   * a Fleet assignment, or any Endpoint state.
+   * Shipped dark by default; enable per environment via config.
+   */
+  elasticDefendPolicyManagementSkill: false,
+
+  /**
    * Enables the find-security-rules Agent Builder skill.
    * Part of the DEX AI skills family (`dexAiSkill*`).
    */

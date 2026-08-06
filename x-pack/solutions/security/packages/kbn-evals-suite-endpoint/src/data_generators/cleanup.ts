@@ -24,11 +24,14 @@ const EVAL_SEEDED_INDICES = [
 const RESTRICTED_INDICES = ['.fleet-agents'];
 
 /**
- * Suite id namespaces MUST stay disjoint: neither prefix may be a prefix of the
- * other, or an ES `prefix` delete on one reclaims the other suite's documents.
+ * Suite id namespaces MUST stay disjoint: no prefix may be a prefix of another,
+ * or an ES `prefix` delete on one reclaims the other suite's documents.
  */
 const TROUBLESHOOTING_AGENT_ID_PREFIX = 'eval-agent-ts-';
 const FORENSIC_AGENT_ID_PREFIX = 'eval-agent-forensic-';
+export const POLICY_MANAGEMENT_APPLY_STATE_AGENT_ID_PARENT_PREFIX = 'eval-agent-pm-';
+
+const RUN_SCOPED_APPLY_STATE_AGENT_ID_PREFIX = /^eval-agent-pm-[0-9a-z]{12}-$/;
 
 interface CleanupClients {
   esClient: Client;
@@ -64,4 +67,25 @@ export async function cleanupTroubleshootingData(clients: CleanupClients): Promi
 
 export async function cleanupForensicData(clients: CleanupClients): Promise<void> {
   return cleanupSeededData({ ...clients, agentIdPrefix: FORENSIC_AGENT_ID_PREFIX });
+}
+
+export const requirePolicyManagementApplyStateAgentIdPrefix = (agentIdPrefix: string): string => {
+  if (!RUN_SCOPED_APPLY_STATE_AGENT_ID_PREFIX.test(agentIdPrefix)) {
+    throw new Error(
+      `cleanupPolicyManagementApplyStateData requires run-scoped prefix ` +
+        `eval-agent-pm-\${shortRun}- (12 [0-9a-z] chars), got ${JSON.stringify(agentIdPrefix)}`
+    );
+  }
+
+  return agentIdPrefix;
+};
+
+export async function cleanupPolicyManagementApplyStateData(
+  clients: CleanupClients,
+  agentIdPrefix: string
+): Promise<void> {
+  return cleanupSeededData({
+    ...clients,
+    agentIdPrefix: requirePolicyManagementApplyStateAgentIdPrefix(agentIdPrefix),
+  });
 }

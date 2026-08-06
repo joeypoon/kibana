@@ -116,6 +116,9 @@ export const AUTOMATIC_TROUBLESHOOTING_EXAMPLES = bySkill(
   'elastic-defend-configuration-troubleshooting'
 );
 export const DETECTION_RULE_EDIT_EXAMPLES = bySkill('detection-rule-edit');
+export const ELASTIC_DEFEND_POLICY_MANAGEMENT_EXAMPLES = bySkill(
+  'elastic-defend-policy-management'
+);
 export const ENTITY_ANALYTICS_EXAMPLES = bySkill('entity-analytics');
 export const FIND_RULES_EXAMPLES = bySkill('find-security-rules');
 export const FIND_SECURITY_ML_JOBS_EXAMPLES = bySkill('find-security-ml-jobs');

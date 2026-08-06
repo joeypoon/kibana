@@ -9,6 +9,7 @@ import type { Logger } from '@kbn/core/server';
 import type { AgentBuilderPluginSetup } from '@kbn/agent-builder-server';
 import type { ExperimentalFeatures } from '../../../common/experimental_features';
 import type { EndpointAppContextService } from '../../endpoint/endpoint_app_context_services';
+import type { ProductFeaturesService } from '../../lib/product_features_service';
 import { createAutomaticTroubleshootingSkill } from './automatic_troubleshooting';
 import { getDetectionRuleEditSkill } from './detection_rule_edit';
 import { getEntityAnalyticsSkill } from './entity_analytics';
@@ -25,6 +26,7 @@ import { siemReadinessSkill } from './siem_readiness';
 import { entityAnalyticsLeadsSkill } from './entity_analytics_leads';
 import { createRecommendPrebuiltRulesSkill } from './recommend_prebuilt_rules';
 import { endpointForensicAnalysisSkill } from './endpoint_forensic_analysis';
+import { createElasticDefendPolicyManagementSkill } from './elastic_defend_policy_management';
 import { SIEM_READINESS_AGENT_BUILDER_ENABLED } from '../siem_readiness_feature_flag';
 
 interface RegisterSkillsOpts {
@@ -36,6 +38,7 @@ interface RegisterSkillsOpts {
   ml: EntityAnalyticsRoutesDeps['ml'];
   options: {
     endpointAppContextService: EndpointAppContextService;
+    productFeaturesService: ProductFeaturesService;
   };
 }
 
@@ -105,5 +108,17 @@ export const registerSkills = async ({
 
   if (experimentalFeatures.investigateRuleSkill) {
     await agentBuilder.skills.register(createInvestigateRuleSkill());
+  }
+
+  if (experimentalFeatures.elasticDefendPolicyManagementSkill) {
+    await agentBuilder.skills.register(
+      createElasticDefendPolicyManagementSkill({
+        getStartServices,
+        endpointAppContextService: options.endpointAppContextService,
+        productFeaturesService: options.productFeaturesService,
+        kibanaVersion,
+        logger,
+      })
+    );
   }
 };

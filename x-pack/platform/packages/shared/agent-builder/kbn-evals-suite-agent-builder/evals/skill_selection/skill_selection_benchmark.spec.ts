@@ -5,6 +5,7 @@
  * 2.0.
  */
 
+import { expect } from '@playwright/test';
 import { evaluate as evalsBase } from '@kbn/evals';
 import { tags } from '@kbn/scout';
 import { AgentBuilderEvaluationChatClient } from '../../src/chat_client';
@@ -15,6 +16,7 @@ import {
   AUTOMATIC_TROUBLESHOOTING_EXAMPLES,
   DASHBOARD_MANAGEMENT_EXAMPLES,
   DETECTION_RULE_EDIT_EXAMPLES,
+  ELASTIC_DEFEND_POLICY_MANAGEMENT_EXAMPLES,
   ENTITY_ANALYTICS_EXAMPLES,
   FIND_RULES_EXAMPLES,
   FIND_SECURITY_ML_JOBS_EXAMPLES,
@@ -212,6 +214,14 @@ evaluate.describe(
         });
       }
     );
+
+    evaluate('elastic-defend-policy-management routing', async ({ evaluateBenchmark }) => {
+      expect(ELASTIC_DEFEND_POLICY_MANAGEMENT_EXAMPLES.length).toBeGreaterThan(0);
+      await evaluateBenchmark({
+        skillId: 'elastic-defend-policy-management',
+        examples: ELASTIC_DEFEND_POLICY_MANAGEMENT_EXAMPLES,
+      });
+    });
 
     evaluate('siem-readiness routing', async ({ evaluateBenchmark }) => {
       await evaluateBenchmark({ skillId: 'siem-readiness', examples: SIEM_READINESS_EXAMPLES });

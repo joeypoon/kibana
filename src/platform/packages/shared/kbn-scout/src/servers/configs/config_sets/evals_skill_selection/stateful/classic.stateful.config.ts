@@ -18,7 +18,8 @@ import { servers as evalsTracingConfig } from '../../evals_tracing/stateful/clas
  * - agentBuilder:experimentalFeatures — enables skill-authoring (experimental: true)
  * - aiAssistant:preferredChatExperience=agent — ensures agent mode is active
  * - securitySolution.enableExperimental — enables elastic-defend-configuration-troubleshooting
- *   (automaticTroubleshootingSkill) and find-security-rules (dexAiSkillFindRules)
+ *   (automaticTroubleshootingSkill), find-security-rules (dexAiSkillFindRules), and
+ *   elastic-defend-policy-management (elasticDefendPolicyManagementSkill)
  * - streams.significantEventsAvailable — enables significant-events-memory skill registration
  *
  * Skills NOT included (intentionally excluded from benchmark scope):
@@ -41,6 +42,7 @@ export const servers: ScoutServerConfig = {
         'automaticTroubleshootingSkill',
         'dexAiSkillFindRules',
         'investigateRuleSkill',
+        'elasticDefendPolicyManagementSkill',
       ])}`,
     ],
   },

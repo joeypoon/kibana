@@ -100,6 +100,12 @@ pci-compliance,security,Check whether our logging and access control meets PCI D
 pci-compliance,security,We are getting audited for card payment security next month — can you check our current compliance posture?,indirect,pci-compliance,
 pci-compliance,security,Our compliance team needs to know if we are meeting access monitoring standards for payment processing systems,indirect,pci-compliance,
 pci-compliance,security,Do we have enough detection and log coverage across our network and endpoint data sources?,distractor,siem-readiness,Distractor: general detection coverage maps to siem-readiness not pci-compliance
+elastic-defend-policy-management,security,What Elastic Defend policies do I have and what is configured on each one?,direct,elastic-defend-policy-management,
+elastic-defend-policy-management,security,Compare my two Elastic Defend policies and tell me exactly which settings differ,direct,elastic-defend-policy-management,
+elastic-defend-policy-management,security,Do I have redundant or unused Elastic Defend integration policies?,direct,elastic-defend-policy-management,
+elastic-defend-policy-management,security,I have accumulated a lot of endpoint protection configurations over time and I am not sure which ones are still doing anything,indirect,elastic-defend-policy-management,
+elastic-defend-policy-management,security,What would change if I turned off the Windows malware blocklist on my production endpoint policy?,indirect,elastic-defend-policy-management,
+elastic-defend-policy-management,security,My Elastic Defend policy is not blocking ransomware samples on some hosts — help me work out why,distractor,elastic-defend-configuration-troubleshooting,Distractor: diagnosing why enforcement is failing maps to elastic-defend-configuration-troubleshooting not read-only policy explanation
 observability.investigation,observability,Investigate why the checkout service has had elevated error rates for the last 30 minutes,direct,investigation,AMBIGUOUS with observability.rca: investigation vs root cause analysis hard to distinguish without deeper phrasing analysis
 observability.investigation,observability,Show me all firing observability alerts for services in the payments namespace,direct,investigation,
 observability.investigation,observability,Something is wrong with our order flow — customers are reporting slow checkouts and intermittent failures,indirect,investigation,AMBIGUOUS with observability.rca: both handle degradation reports

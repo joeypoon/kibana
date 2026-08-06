@@ -313,7 +313,7 @@ export class Plugin implements ISecuritySolutionPlugin {
       kibanaVersion: this.pluginContext.env.packageInfo.version,
       logger,
       ml: plugins.ml,
-      options: { endpointAppContextService },
+      options: { endpointAppContextService, productFeaturesService: this.productFeaturesService },
     }).catch((error) => {
       this.logger.error(`Error registering security skills: ${error}`);
     });
