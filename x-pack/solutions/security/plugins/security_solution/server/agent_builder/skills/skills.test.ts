@@ -7,6 +7,7 @@
 
 import { platformCoreTools } from '@kbn/agent-builder-common';
 import { validateSkillDefinition } from '@kbn/agent-builder-server/skills/type_definition';
+import { createMockEndpointAppContext } from '../../endpoint/mocks';
 import { threatHuntingSkill } from './threat_hunting';
 import { alertAnalysisSkill } from './alert_analysis';
 import { alertTriageSkill, ALERT_TRIAGE_TOOL_ID } from './alert_triage';
@@ -17,6 +18,69 @@ import {
   automaticMigrationRulesUpdateMigrationSkill,
   automaticMigrationRulesDeleteMigrationSkill,
 } from './siem_migration';
+import { createElasticDefendPolicyManagementSkill } from './elastic_defend_policy_management';
+
+jest.mock(
+  './elastic_defend_policy_management/tools/list_policies',
+  () => ({
+    LIST_POLICIES_TOOL_ID: 'security.policy_management.list_policies',
+    createListPoliciesTool: jest.fn(() => ({
+      id: 'security.policy_management.list_policies',
+    })),
+  }),
+  { virtual: true }
+);
+
+jest.mock(
+  './elastic_defend_policy_management/tools/get_policy',
+  () => ({
+    GET_POLICY_TOOL_ID: 'security.policy_management.get_policy',
+    createGetPolicyTool: jest.fn(() => ({
+      id: 'security.policy_management.get_policy',
+    })),
+  }),
+  { virtual: true }
+);
+
+jest.mock(
+  './elastic_defend_policy_management/tools/compare_policies',
+  () => ({
+    COMPARE_POLICIES_TOOL_ID: 'security.policy_management.compare_policies',
+    createComparePoliciesTool: jest.fn(() => ({
+      id: 'security.policy_management.compare_policies',
+    })),
+  }),
+  { virtual: true }
+);
+
+jest.mock(
+  './elastic_defend_policy_management/tools/get_policy_apply_state_tool',
+  () => ({
+    GET_POLICY_APPLY_STATE_TOOL_ID: 'security.policy_management.get_policy_apply_state',
+    createGetPolicyApplyStateTool: jest.fn(() => ({
+      id: 'security.policy_management.get_policy_apply_state',
+    })),
+  }),
+  { virtual: true }
+);
+
+jest.mock(
+  './elastic_defend_policy_management/tools/assess_policy_change',
+  () => ({
+    ASSESS_POLICY_CHANGE_TOOL_ID: 'security.policy_management.assess_policy_change',
+    createAssessPolicyChangeTool: jest.fn(() => ({
+      id: 'security.policy_management.assess_policy_change',
+    })),
+  }),
+  { virtual: true }
+);
+
+const endpointAppContextService = createMockEndpointAppContext().service;
+const getStartServices = jest.fn();
+const elasticDefendPolicyManagementSkill = createElasticDefendPolicyManagementSkill({
+  endpointAppContextService,
+  getStartServices,
+});
 
 const ALL_SKILLS = [
   threatHuntingSkill,
@@ -27,6 +91,7 @@ const ALL_SKILLS = [
   automaticMigrationRulesStopMigrationSkill,
   automaticMigrationRulesUpdateMigrationSkill,
   automaticMigrationRulesDeleteMigrationSkill,
+  elasticDefendPolicyManagementSkill,
 ];
 
 describe('Security Skills', () => {
@@ -452,7 +517,6 @@ describe('Security Skills', () => {
     });
 
     it('AUTOMATIC_RULE_MIGRATION_CAPABILITIES_BLOCK does not reference the dropped resources skill', () => {
-      // automatic-migration-rules-get-resources was dropped; the capability map must not list it.
       for (const skill of ALL_SKILLS) {
         expect(skill.content).not.toContain('automatic-migration-rules-get-resources');
       }

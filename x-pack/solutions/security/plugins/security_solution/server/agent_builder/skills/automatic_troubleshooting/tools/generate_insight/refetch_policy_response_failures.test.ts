@@ -198,6 +198,66 @@ describe('getPolicyResponseFailureEvents', () => {
     ]);
   });
 
+  it('maps extra applied fields away from the public failure event', async () => {
+    const esClient = mockEsClient([
+      {
+        key: 'a',
+        doc_count: 1,
+        latest_event: {
+          hits: {
+            hits: [
+              {
+                _id: 'doc-a',
+                _source: {
+                  agent: { id: 'a' },
+                  Endpoint: {
+                    policy: {
+                      applied: {
+                        id: 'policy-1',
+                        version: 3,
+                        endpoint_policy_version: 4,
+                        actions: [
+                          {
+                            name: 'configure_malware',
+                            message: 'malware failed',
+                            status: 'failure',
+                          },
+                        ],
+                      },
+                    },
+                  },
+                  host: { os: { name: 'Linux' } },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ]);
+
+    const result = await getPolicyResponseFailureEvents(esClient, { endpointIds: ['a'] });
+
+    expect(result).toEqual([
+      {
+        _id: ['doc-a'],
+        'agent.id': ['a'],
+        'host.os.name': ['Linux'],
+        'actions.name': ['configure_malware'],
+        'actions.message': ['malware failed'],
+        'actions.status': ['failure'],
+      },
+    ]);
+  });
+
+  it('does not search Elasticsearch when endpointIds is empty', async () => {
+    const esClient = mockEsClient([]);
+
+    await expect(getPolicyResponseFailureEvents(esClient, { endpointIds: [] })).resolves.toEqual(
+      []
+    );
+    expect(esClient.search).not.toHaveBeenCalled();
+  });
+
   it('propagates the rejection when the Elasticsearch search fails', async () => {
     const esClient = {
       search: jest.fn().mockRejectedValue(new Error('search rejected')),

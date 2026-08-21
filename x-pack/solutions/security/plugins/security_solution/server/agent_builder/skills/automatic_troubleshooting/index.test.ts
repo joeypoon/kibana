@@ -28,6 +28,12 @@ describe('createAutomaticTroubleshootingSkill', () => {
       expect(skill.basePath).toBe('skills/security/endpoint');
       expect(skill.description).toContain('Troubleshoot Elastic Defend endpoint health');
       expect(skill.content).toContain('Elastic Defend Configuration Troubleshooting');
+      expect(skill.content).toContain(
+        '"Elastic Defend" configuration failures, errors, or policy not applying'
+      );
+      expect(skill.content).toContain(
+        'Elastic Defend package errors, warnings, or install failures'
+      );
     });
 
     it('includes available indices in referenced content', () => {

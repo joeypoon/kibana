@@ -9,6 +9,10 @@ import { httpServerMock } from '@kbn/core/server/mocks';
 import { asSpaceId } from '@kbn/core-spaces-common';
 import { EndpointAppContextService } from './endpoint_app_context_services';
 import {
+  EndpointAppContentServicesNotSetUpError,
+  EndpointAppContentServicesNotStartedError,
+} from './errors';
+import {
   createMockEndpointAppContextServiceSetupContract,
   createMockEndpointAppContextServiceStartContract,
 } from './mocks';
@@ -217,6 +221,61 @@ describe('test endpoint app context services', () => {
 
       expect(result).toBe(expectedSpace);
       expect(service.getActiveSpace).toHaveBeenCalledWith(request);
+    });
+  });
+
+  describe('environment dependency accessors', () => {
+    let service: EndpointAppContextService;
+    let setupContract: ReturnType<typeof createMockEndpointAppContextServiceSetupContract>;
+    let startContract: ReturnType<typeof createMockEndpointAppContextServiceStartContract>;
+
+    beforeEach(() => {
+      service = new EndpointAppContextService();
+      setupContract = createMockEndpointAppContextServiceSetupContract();
+      startContract = createMockEndpointAppContextServiceStartContract();
+    });
+
+    afterEach(() => {
+      service.stop();
+    });
+
+    it('returns the stored CloudSetup after setup', () => {
+      service.setup(setupContract);
+
+      expect(service.getCloudSetup()).toBe(setupContract.cloud);
+    });
+
+    it('returns the stored start dependencies after start', () => {
+      service.setup(setupContract);
+      service.start(startContract);
+
+      expect(service.getCloudSetup()).toBe(setupContract.cloud);
+      expect(service.getProductFeaturesService()).toBe(startContract.productFeaturesService);
+      expect(service.getTelemetryConfigProvider()).toBe(startContract.telemetryConfigProvider);
+    });
+
+    it('throws the setup-not-ready error from getCloudSetup before setup', () => {
+      expect(() => service.getCloudSetup()).toThrow(EndpointAppContentServicesNotSetUpError);
+    });
+
+    it('throws the start-not-ready error from start accessors before start', () => {
+      service.setup(setupContract);
+
+      expect(() => service.getProductFeaturesService()).toThrow(
+        EndpointAppContentServicesNotStartedError
+      );
+      expect(() => service.getTelemetryConfigProvider()).toThrow(
+        EndpointAppContentServicesNotStartedError
+      );
+    });
+
+    it('keeps getTelemetryService as analytics and distinct from getTelemetryConfigProvider', () => {
+      service.setup(setupContract);
+      service.start(startContract);
+
+      expect(service.getTelemetryService()).toBe(setupContract.telemetry);
+      expect(service.getTelemetryConfigProvider()).toBe(startContract.telemetryConfigProvider);
+      expect(service.getTelemetryConfigProvider()).not.toBe(service.getTelemetryService());
     });
   });
 });

@@ -16,12 +16,17 @@ import { FleetPackagePolicyGenerator } from '../../../common/endpoint/data_gener
 import type { PolicyData } from '../../../common/endpoint/types';
 import {
   ensureOnlyEventCollectionIsAllowed,
+  removeDeviceControl,
   resetCustomNotifications,
 } from '../../../common/endpoint/models/policy_config_helpers';
 import type { ProductFeaturesService } from '../../lib/product_features_service/product_features_service';
 import { createProductFeaturesServiceMock } from '../../lib/product_features_service/mocks';
 import { merge } from 'lodash';
-import { DefaultPolicyNotificationMessage } from '../../../common/endpoint/models/policy_config';
+import {
+  DefaultPolicyDeviceNotificationMessage,
+  DefaultPolicyNotificationMessage,
+  DefaultPolicyRuleNotificationMessage,
+} from '../../../common/endpoint/models/policy_config';
 import { loggingSystemMock } from '@kbn/core-logging-server-mocks';
 import { createEndpointFleetServicesFactoryMock } from '../services/fleet/endpoint_fleet_services_factory.mocks';
 
@@ -91,8 +96,18 @@ describe('Turn Off Policy Protections Migration', () => {
     defaultProtections: boolean;
     defaultNotes: boolean;
     defaultUpdates: boolean;
-  }) =>
-    expect.arrayContaining([
+  }) => {
+    const globalManifestVersion = defaultUpdates ? 'latest' : '2023-01-01';
+    const protectionMode = defaultProtections ? 'off' : 'prevent';
+    const ruleNotificationMessage = defaultNotes
+      ? DefaultPolicyRuleNotificationMessage
+      : 'custom test';
+    const notificationMessage = defaultNotes ? DefaultPolicyNotificationMessage : 'custom test';
+    const deviceNotificationMessage = defaultNotes
+      ? DefaultPolicyDeviceNotificationMessage
+      : 'custom test';
+
+    return expect.arrayContaining([
       expect.objectContaining({
         id,
         inputs: [
@@ -100,76 +115,85 @@ describe('Turn Off Policy Protections Migration', () => {
             config: expect.objectContaining({
               policy: expect.objectContaining({
                 value: expect.objectContaining({
-                  global_manifest_version: defaultUpdates ? 'latest' : '2023-01-01',
+                  global_manifest_version: globalManifestVersion,
                   linux: expect.objectContaining({
                     behavior_protection: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     memory_protection: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     malware: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     popup: expect.objectContaining({
                       behavior_protection: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: ruleNotificationMessage,
                       }),
                       memory_protection: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: ruleNotificationMessage,
                       }),
                       malware: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: notificationMessage,
                       }),
                     }),
                   }),
                   mac: expect.objectContaining({
                     behavior_protection: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     memory_protection: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     malware: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     popup: expect.objectContaining({
                       behavior_protection: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: ruleNotificationMessage,
                       }),
                       memory_protection: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: ruleNotificationMessage,
                       }),
                       malware: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: notificationMessage,
+                      }),
+                      ransomware: expect.objectContaining({
+                        message: notificationMessage,
+                      }),
+                      device_control: expect.objectContaining({
+                        message: deviceNotificationMessage,
                       }),
                     }),
                   }),
                   windows: expect.objectContaining({
                     behavior_protection: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     memory_protection: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     malware: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     ransomware: expect.objectContaining({
-                      mode: defaultProtections ? 'off' : 'prevent',
+                      mode: protectionMode,
                     }),
                     popup: expect.objectContaining({
                       behavior_protection: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: ruleNotificationMessage,
                       }),
                       memory_protection: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: ruleNotificationMessage,
                       }),
                       malware: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: notificationMessage,
                       }),
                       ransomware: expect.objectContaining({
-                        message: defaultNotes ? DefaultPolicyNotificationMessage : 'custom test',
+                        message: notificationMessage,
+                      }),
+                      device_control: expect.objectContaining({
+                        message: deviceNotificationMessage,
                       }),
                     }),
                   }),
@@ -180,6 +204,7 @@ describe('Turn Off Policy Protections Migration', () => {
         ],
       }),
     ]);
+  };
 
   const createFilteredProductFeaturesServiceMock = (
     keysToExclude: string[] = [
@@ -233,6 +258,27 @@ describe('Turn Off Policy Protections Migration', () => {
         await callTurnOffPolicyProtections();
 
         expect(fleetServices.packagePolicy.bulkUpdate).not.toHaveBeenCalled();
+      });
+
+      it('should not update a stripped policy solely for absent device-control popup messages', async () => {
+        productFeatureService = createFilteredProductFeaturesServiceMock([
+          'endpoint_custom_notification',
+        ]);
+
+        const policy = new FleetPackagePolicyGenerator('seed').generateEndpointPackagePolicy();
+        policy.inputs[0].config.policy.value = removeDeviceControl(
+          policy.inputs[0].config.policy.value
+        );
+
+        mockPolicyListResponse({ items: [policy] });
+
+        await callTurnOffPolicyProtections();
+
+        expect(fleetServices.packagePolicy.bulkUpdate).not.toHaveBeenCalled();
+        expect(policy.inputs[0].config.policy.value.windows.popup).not.toHaveProperty(
+          'device_control'
+        );
+        expect(policy.inputs[0].config.policy.value.mac.popup).not.toHaveProperty('device_control');
       });
     });
 
@@ -310,6 +356,30 @@ describe('Turn Off Policy Protections Migration', () => {
         );
       });
 
+      it('should reset notifications when a stripped policy has one explicit custom message', async () => {
+        productFeatureService = createFilteredProductFeaturesServiceMock([
+          'endpoint_custom_notification',
+        ]);
+
+        const policy = new FleetPackagePolicyGenerator('seed').generateEndpointPackagePolicy();
+        policy.inputs[0].config.policy.value = removeDeviceControl(
+          policy.inputs[0].config.policy.value
+        );
+        policy.inputs[0].config.policy.value.windows.popup.malware.message = 'custom test';
+
+        mockPolicyListResponse({ items: [policy] });
+
+        await callTurnOffPolicyProtections();
+
+        expect(fleetServices.packagePolicy.bulkUpdate).toHaveBeenCalledTimes(1);
+        const mockArguments = (fleetServices.packagePolicy.bulkUpdate as jest.Mock).mock
+          .calls[0][2];
+        expect(mockArguments.length).toBe(1);
+        expect(mockArguments[0].inputs[0].config.policy.value.windows.popup.malware.message).toBe(
+          DefaultPolicyNotificationMessage
+        );
+      });
+
       it('should update properly if only `endpointCustomNote` not compliant', async () => {
         const allPolicies = [
           generatePolicyMock(true, false, true), // Default protections, default manifest, custom notifications set
@@ -357,10 +427,10 @@ describe('Turn Off Policy Protections Migration', () => {
         );
         expect(
           mockArguments[0].inputs[0].config.policy.value.windows.popup.memory_protection.message
-        ).toBe(DefaultPolicyNotificationMessage);
+        ).toBe(DefaultPolicyRuleNotificationMessage);
         expect(
           mockArguments[1].inputs[0].config.policy.value.windows.popup.memory_protection.message
-        ).toBe(DefaultPolicyNotificationMessage);
+        ).toBe(DefaultPolicyRuleNotificationMessage);
       });
     });
 

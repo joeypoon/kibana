@@ -27,6 +27,7 @@ import { SettingCardHeader } from './setting_card';
 import type { PolicyFormComponentCommonProps } from '../types';
 import type { ImmutableArray, UIPolicyConfig } from '../../../../../../../common/endpoint/types';
 import { ProtectionModes } from '../../../../../../../common/endpoint/types';
+import { setPopupEnabled } from '../../../../../../../common/endpoint/models/policy_config_helpers';
 import type { PolicyProtection, MacPolicyProtection, LinuxPolicyProtection } from '../../../types';
 import { useGetCustomNotificationUnavailableComponent } from '../hooks/use_get_custom_notification_unavailable_component';
 import {
@@ -62,17 +63,7 @@ export const NotifyUserOption = React.memo(
     const handleUserNotificationCheckbox = useCallback<EuiCheckboxProps['onChange']>(
       (event) => {
         const newPayload = cloneDeep(policy);
-
-        for (const os of osList) {
-          if (os === 'windows') {
-            newPayload[os].popup[protection].enabled = event.target.checked;
-          } else if (os === 'mac') {
-            newPayload[os].popup[protection as MacPolicyProtection].enabled = event.target.checked;
-          } else if (os === 'linux') {
-            newPayload[os].popup[protection as LinuxPolicyProtection].enabled =
-              event.target.checked;
-          }
-        }
+        setPopupEnabled(newPayload, protection, osList, event.target.checked);
 
         onChange({ isValid: true, updatedPolicy: newPayload });
       },

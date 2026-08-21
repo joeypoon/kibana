@@ -13,4 +13,5 @@ export { pciComplianceSkill } from './pci_compliance';
 export { getDetectionRuleEditSkill } from './detection_rule_edit';
 export { createFindRulesSkill } from './find_rules';
 export { createRecommendPrebuiltRulesSkill } from './recommend_prebuilt_rules';
+export { createElasticDefendPolicyManagementSkill } from './elastic_defend_policy_management';
 export { registerSkills } from './register_skills';

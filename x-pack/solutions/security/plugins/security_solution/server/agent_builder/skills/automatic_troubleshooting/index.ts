@@ -42,7 +42,7 @@ This skill diagnoses and resolves Elastic Defend configuration issues on endpoin
 ## When to use this skill (REQUIRED)
 
 You MUST use this skill when the user mentions ANY of these:
-- "Elastic Defend" configuration issues
+- "Elastic Defend" configuration failures, errors, or policy not applying
 - Endpoint troubleshooting or diagnostics
 - Endpoint or Defend hosts that are unhealthy, degraded, warning, failing, or not applying policy
 - Endpoint not showing up, not reporting, or missing from the endpoint list
@@ -52,7 +52,7 @@ You MUST use this skill when the user mentions ANY of these:
 - Agent enrollment or check-in problems related to Elastic Defend
 - Endpoint protection not applying or not updating
 - Protection artifacts, artifact snapshots, global artifacts, manifest versions, or protection updates
-- Elastic Defend package configuration questions
+- Elastic Defend package errors, warnings, or install failures
 - Endpoint isolation, response action, or policy sync issues
 - Endpoint exceptions, trusted apps, trusted devices, event filters, blocklists, or host isolation exceptions not working as expected
 - Security alerts or events still appearing despite a configured endpoint exception or allowlist

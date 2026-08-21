@@ -307,6 +307,14 @@ export class EndpointAppContextService {
     return Boolean(this.setupDependencies.cloud.isServerlessEnabled);
   }
 
+  public getCloudSetup(): CloudSetup {
+    if (!this.setupDependencies) {
+      throw new EndpointAppContentServicesNotSetUpError();
+    }
+
+    return this.setupDependencies.cloud;
+  }
+
   /**
    * Returns `true` when Cross-Cluster Search (CCS) for Elastic Defend should be applied — i.e. the
    * `defendRemoteOutputCcs` feature flag is enabled AND the cluster currently has at least one
@@ -507,6 +515,13 @@ export class EndpointAppContextService {
     return this.startDependencies.licenseService;
   }
 
+  public getProductFeaturesService(): ProductFeaturesService {
+    if (this.startDependencies == null) {
+      throw new EndpointAppContentServicesNotStartedError();
+    }
+    return this.startDependencies.productFeaturesService;
+  }
+
   public async getCasesClient(req: KibanaRequest): Promise<CasesClient> {
     if (this.startDependencies?.cases == null) {
       throw new EndpointAppContentServicesNotStartedError();
@@ -638,6 +653,13 @@ export class EndpointAppContextService {
       throw new EndpointAppContentServicesNotSetUpError();
     }
     return this.setupDependencies.telemetry;
+  }
+
+  public getTelemetryConfigProvider(): TelemetryConfigProvider {
+    if (this.startDependencies == null) {
+      throw new EndpointAppContentServicesNotStartedError();
+    }
+    return this.startDependencies.telemetryConfigProvider;
   }
 
   public getActiveSpace(httpRequest: KibanaRequest): Promise<Space> {

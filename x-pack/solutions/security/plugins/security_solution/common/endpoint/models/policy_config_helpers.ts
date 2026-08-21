@@ -7,7 +7,11 @@
 
 import { get } from 'lodash';
 import { set } from '@kbn/safer-lodash-set';
-import { DefaultPolicyNotificationMessage } from './policy_config';
+import {
+  DefaultPolicyDeviceNotificationMessage,
+  DefaultPolicyNotificationMessage,
+  DefaultPolicyRuleNotificationMessage,
+} from './policy_config';
 import type { PolicyConfig } from '../types';
 import {
   PolicyOperatingSystem,
@@ -286,6 +290,20 @@ export function isBillablePolicy(policy: PolicyConfig) {
   return !isPolicySetToEventCollectionOnly(policy).isOnlyCollectingEvents;
 }
 
+const getDefaultPopupMessageForKeyPath = (keyPath: string): string => {
+  const family = keyPath.split('.')[1];
+
+  if (family === 'device_control') {
+    return DefaultPolicyDeviceNotificationMessage;
+  }
+
+  if (family === 'memory_protection' || family === 'behavior_protection') {
+    return DefaultPolicyRuleNotificationMessage;
+  }
+
+  return DefaultPolicyNotificationMessage;
+};
+
 export const checkIfPopupMessagesContainCustomNotifications = (policy: PolicyConfig): boolean => {
   const popupRefs = getPolicyPopupReference();
 
@@ -293,19 +311,21 @@ export const checkIfPopupMessagesContainCustomNotifications = (policy: PolicyCon
     return osList.some((osValue) => {
       const fullKeyPathForOs = `${osValue}.${keyPath}`;
       const currentValue = get(policy, fullKeyPathForOs);
-      return currentValue !== '' && currentValue !== DefaultPolicyNotificationMessage;
+      if (currentValue == null || currentValue === '') {
+        return false;
+      }
+      return currentValue !== getDefaultPopupMessageForKeyPath(keyPath);
     });
   });
 };
 
-export const resetCustomNotifications = (
-  customNotification = DefaultPolicyNotificationMessage
-): Partial<PolicyConfig> => {
+export const resetCustomNotifications = (customNotification?: string): Partial<PolicyConfig> => {
   const popupRefs = getPolicyPopupReference();
 
   return popupRefs.reduce((acc, { keyPath, osList }) => {
+    const message = customNotification ?? getDefaultPopupMessageForKeyPath(keyPath);
     osList.forEach((osValue) => {
-      set(acc, `${osValue}.${keyPath}`, customNotification);
+      set(acc, `${osValue}.${keyPath}`, message);
     });
     return acc;
   }, {});
@@ -361,4 +381,171 @@ export const removeLinuxDnsEvents = (policy: PolicyConfig): PolicyConfig => {
       },
     },
   };
+};
+
+export type PolicyCouplingProtection =
+  | 'malware'
+  | 'ransomware'
+  | 'memory_protection'
+  | 'behavior_protection';
+
+export type PolicyCouplingMalwareBooleanField = 'blocklist' | 'on_write_scan';
+
+const isPolicyCouplingOs = (os: string): os is PolicyOperatingSystem =>
+  os === PolicyOperatingSystem.windows ||
+  os === PolicyOperatingSystem.mac ||
+  os === PolicyOperatingSystem.linux;
+
+const forEachCouplingOs = (
+  osList: readonly string[],
+  write: (os: PolicyOperatingSystem) => void
+) => {
+  for (const os of osList) {
+    if (isPolicyCouplingOs(os)) {
+      write(os);
+    }
+  }
+};
+
+export const setProtectionModeAndPopup = ({
+  policy,
+  protection,
+  osList,
+  mode,
+  syncPopupEnabled,
+  popupEnabled,
+}: {
+  policy: PolicyConfig;
+  protection: PolicyCouplingProtection;
+  osList: readonly string[];
+  mode: ProtectionModes;
+  syncPopupEnabled: boolean;
+  popupEnabled: boolean;
+}): PolicyConfig => {
+  forEachCouplingOs(osList, (os) => {
+    set(policy, `${os}.${protection}.mode`, mode);
+    if (syncPopupEnabled) {
+      set(policy, `${os}.popup.${protection}.enabled`, popupEnabled);
+    }
+  });
+  return policy;
+};
+
+export const setBehaviorReputationService = (
+  policy: PolicyConfig,
+  value: unknown
+): PolicyConfig => {
+  set(policy, 'windows.behavior_protection.reputation_service', value);
+  set(policy, 'mac.behavior_protection.reputation_service', value);
+  set(policy, 'linux.behavior_protection.reputation_service', value);
+  return policy;
+};
+
+export const setMalwareBoolean = (
+  policy: PolicyConfig,
+  field: PolicyCouplingMalwareBooleanField,
+  value: unknown,
+  osList: readonly string[]
+): PolicyConfig => {
+  forEachCouplingOs(osList, (os) => {
+    set(policy, `${os}.malware.${field}`, value);
+  });
+  return policy;
+};
+
+export const setDeviceControlSwitch = (policy: PolicyConfig, value: unknown): PolicyConfig => {
+  if (value === false) {
+    policy.windows.device_control = {
+      enabled: false,
+      usb_storage: DeviceControlAccessLevel.audit,
+    };
+    policy.windows.popup.device_control = {
+      enabled: false,
+      message: policy.windows.popup.device_control?.message || '',
+    };
+
+    policy.mac.device_control = {
+      enabled: false,
+      usb_storage: DeviceControlAccessLevel.audit,
+    };
+    policy.mac.popup.device_control = {
+      enabled: false,
+      message: policy.mac.popup.device_control?.message || '',
+    };
+
+    return policy;
+  }
+
+  policy.windows.device_control = {
+    enabled: true,
+    usb_storage: DeviceControlAccessLevel.deny_all,
+  };
+  policy.windows.popup = policy.windows.popup || {};
+  policy.windows.popup.device_control = {
+    enabled: true,
+    message: policy.windows.popup.device_control?.message || '',
+  };
+
+  policy.mac.device_control = {
+    enabled: true,
+    usb_storage: DeviceControlAccessLevel.deny_all,
+  };
+  policy.mac.popup = policy.mac.popup || {};
+  policy.mac.popup.device_control = {
+    enabled: true,
+    message: policy.mac.popup.device_control?.message || '',
+  };
+
+  return policy;
+};
+
+export const setDeviceControlUsbStorage = (policy: PolicyConfig, value: unknown): PolicyConfig => {
+  if (!policy.windows.device_control) {
+    set(policy, 'windows.device_control', { enabled: true, usb_storage: value });
+  } else {
+    set(policy, 'windows.device_control.usb_storage', value);
+  }
+
+  if (!policy.mac.device_control) {
+    set(policy, 'mac.device_control', { enabled: true, usb_storage: value });
+  } else {
+    set(policy, 'mac.device_control.usb_storage', value);
+  }
+
+  if (value === 'deny_all') {
+    if (policy.windows.popup.device_control) {
+      policy.windows.popup.device_control.enabled = true;
+    }
+    if (policy.mac.popup.device_control) {
+      policy.mac.popup.device_control.enabled = true;
+    }
+  } else {
+    if (policy.windows.popup.device_control) {
+      policy.windows.popup.device_control.enabled = false;
+    }
+    if (policy.mac.popup.device_control) {
+      policy.mac.popup.device_control.enabled = false;
+    }
+  }
+
+  return policy;
+};
+
+export const constrainLinuxTtyIo = (policy: PolicyConfig): PolicyConfig => {
+  if (policy.linux.events.session_data === false) {
+    policy.linux.events.tty_io = false;
+  }
+  return policy;
+};
+
+export const setPopupEnabled = (
+  policy: PolicyConfig,
+  protection: PolicyCouplingProtection,
+  osList: readonly string[],
+  enabled: unknown
+): PolicyConfig => {
+  forEachCouplingOs(osList, (os) => {
+    set(policy, `${os}.popup.${protection}.enabled`, enabled);
+  });
+  return policy;
 };

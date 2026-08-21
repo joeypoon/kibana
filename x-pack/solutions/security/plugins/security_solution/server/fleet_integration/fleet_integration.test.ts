@@ -76,7 +76,10 @@ import { createMockPolicyData } from '../endpoint/services/feature_usage/mocks';
 import { ALL_ENDPOINT_ARTIFACT_LIST_IDS } from '../../common/endpoint/service/artifacts/constants';
 import { ENDPOINT_ARTIFACT_LISTS } from '@kbn/securitysolution-list-constants';
 import * as PolicyConfigHelpers from '../../common/endpoint/models/policy_config_helpers';
-import { disableProtections } from '../../common/endpoint/models/policy_config_helpers';
+import {
+  disableProtections,
+  removeDeviceControl,
+} from '../../common/endpoint/models/policy_config_helpers';
 import type { ProductFeaturesService } from '../lib/product_features_service/product_features_service';
 import { createProductFeaturesServiceMock } from '../lib/product_features_service/mocks';
 import * as moment from 'moment';
@@ -808,6 +811,44 @@ describe('Fleet integrations', () => {
         );
         const policyConfig = generator.generatePolicyPackagePolicy();
         policyConfig.inputs[0]!.config!.policy.value.windows.popup.ransomware.message = 'foo';
+        await expect(() =>
+          callback(policyConfig, soClient, esClient, requestContextMock.convertContext(ctx), req)
+        ).rejects.toThrow(
+          'To customize the user notification, you must add Endpoint Protection Complete to your project.'
+        );
+      });
+
+      it('should not throw if endpointCustomNotification productFeature is disabled and device-control popup messages are absent', async () => {
+        productFeaturesService = createProductFeaturesServiceMock(
+          ALL_PRODUCT_FEATURE_KEYS.filter((key) => key !== 'endpoint_custom_notification')
+        );
+        const callback = getPackagePolicyUpdateCallback(
+          endpointAppContextServiceMock,
+          cloudService,
+          productFeaturesService,
+          experimentalFeatures
+        );
+        const policyConfig = generator.generatePolicyPackagePolicy();
+        policyConfig.inputs[0]!.config!.policy.value = removeDeviceControl(policyFactory());
+        await expect(
+          callback(policyConfig, soClient, esClient, requestContextMock.convertContext(ctx), req)
+        ).resolves.toBeDefined();
+      });
+
+      it('should throw if endpointCustomNotification productFeature is disabled and a stripped policy has one custom popup message', async () => {
+        productFeaturesService = createProductFeaturesServiceMock(
+          ALL_PRODUCT_FEATURE_KEYS.filter((key) => key !== 'endpoint_custom_notification')
+        );
+        const callback = getPackagePolicyUpdateCallback(
+          endpointAppContextServiceMock,
+          cloudService,
+          productFeaturesService,
+          experimentalFeatures
+        );
+        const policyConfig = generator.generatePolicyPackagePolicy();
+        const strippedPolicy = removeDeviceControl(policyFactory());
+        strippedPolicy.windows.popup.malware.message = 'foo';
+        policyConfig.inputs[0]!.config!.policy.value = strippedPolicy;
         await expect(() =>
           callback(policyConfig, soClient, esClient, requestContextMock.convertContext(ctx), req)
         ).rejects.toThrow(
