@@ -5,6 +5,7 @@
  * 2.0.
  */
 
+import moment from 'moment';
 import {
   AntivirusRegistrationModes,
   DeviceControlAccessLevel,
@@ -16,34 +17,21 @@ import {
   type PolicyCouplingMalwareBooleanField,
   type PolicyCouplingProtection,
 } from '../../../../../../common/endpoint/models/policy_config_helpers';
-import { getFieldRegistryEntry, isWritablePath } from '../field_registry';
-import {
-  POLICY_CHANGE_PREPARATION_ERROR_CODE,
-  PolicyChangePreparationError,
-  invalidSetFieldValueMessage,
-} from './policy_change_operation';
+import { getControlledArtifactCutoffDate } from '../../../../../../common/endpoint/utils/controlled_artifact_rollout';
+import { describePathWritability, getFieldRegistryEntry } from '../field_registry';
+import { PolicyChangeRejectedError } from './policy_operation_rejection';
 
-const enumValues =
-  <T extends string>(values: readonly T[]) =>
-  (path: string, value: unknown): T => {
-    if (typeof value !== 'string' || !values.includes(value as T)) {
-      throw new PolicyChangePreparationError(
-        POLICY_CHANGE_PREPARATION_ERROR_CODE.invalid_input,
-        invalidSetFieldValueMessage(path)
-      );
+export type SetFieldValueDomain =
+  | { readonly type: 'enum'; readonly values: readonly string[] }
+  | { readonly type: 'boolean' }
+  | {
+      readonly type: 'manifest_version';
+      readonly keywords: readonly ['latest'];
+      readonly earliest: string;
+      readonly latest: string;
     }
-    return value as T;
-  };
-
-const assertBoolean = (path: string, value: unknown): boolean => {
-  if (typeof value !== 'boolean') {
-    throw new PolicyChangePreparationError(
-      POLICY_CHANGE_PREPARATION_ERROR_CODE.invalid_input,
-      invalidSetFieldValueMessage(path)
-    );
-  }
-  return value;
-};
+  | { readonly type: 'string' }
+  | { readonly type: 'number' };
 
 const protectionForKeyPath = (path: string): PolicyCouplingProtection | undefined => {
   const [, ...remainder] = path.split('.');
@@ -91,6 +79,83 @@ const deviceControlFieldOf = (path: string): 'enabled' | 'usb_storage' | undefin
   return parts[2] === 'enabled' || parts[2] === 'usb_storage' ? parts[2] : undefined;
 };
 
+const PROTECTION_MODE_VALUES: readonly string[] = Object.values(ProtectionModes);
+const ANTIVIRUS_REGISTRATION_MODE_VALUES: readonly string[] = Object.values(
+  AntivirusRegistrationModes
+);
+const DEVICE_CONTROL_ACCESS_LEVEL_VALUES: readonly string[] =
+  Object.values(DeviceControlAccessLevel);
+
+export const getSetFieldValueDomain = (path: string): SetFieldValueDomain | undefined => {
+  const writability = describePathWritability(path);
+  if (!writability.writable) {
+    return undefined;
+  }
+
+  if (protectionModeOf(path) !== undefined) {
+    return { type: 'enum', values: PROTECTION_MODE_VALUES };
+  }
+
+  if (path === 'windows.antivirus_registration.mode') {
+    return { type: 'enum', values: ANTIVIRUS_REGISTRATION_MODE_VALUES };
+  }
+
+  const deviceField = deviceControlFieldOf(path);
+  if (deviceField === 'usb_storage') {
+    return { type: 'enum', values: DEVICE_CONTROL_ACCESS_LEVEL_VALUES };
+  }
+  if (deviceField === 'enabled') {
+    return { type: 'boolean' };
+  }
+
+  if (
+    popupProtectionOf(path) !== undefined ||
+    malwareBooleanFieldOf(path) !== undefined ||
+    path.endsWith('.behavior_protection.reputation_service') ||
+    path === 'linux.events.session_data' ||
+    path === 'linux.events.tty_io'
+  ) {
+    return { type: 'boolean' };
+  }
+
+  if (path === 'global_manifest_version') {
+    return {
+      type: 'manifest_version',
+      keywords: ['latest'],
+      earliest: getControlledArtifactCutoffDate().format('YYYY-MM-DD'),
+      latest: moment.utc().subtract(1, 'day').format('YYYY-MM-DD'),
+    };
+  }
+
+  const entry = getFieldRegistryEntry(path);
+  if (entry?.defaultValue !== undefined) {
+    const valueType = typeof entry.defaultValue;
+    if (valueType === 'boolean') {
+      return { type: 'boolean' };
+    }
+    if (valueType === 'string') {
+      return { type: 'string' };
+    }
+    if (valueType === 'number') {
+      return { type: 'number' };
+    }
+  }
+
+  return { type: 'string' };
+};
+
+const rejectedValue = (path: string): PolicyChangeRejectedError => {
+  const acceptedValues = getSetFieldValueDomain(path);
+  return new PolicyChangeRejectedError([
+    {
+      operationIndexes: [],
+      path,
+      reason: 'invalid_value',
+      ...(acceptedValues !== undefined ? { acceptedValues } : {}),
+    },
+  ]);
+};
+
 export type ClassifiedSetFieldValue =
   | {
       readonly kind: 'protection_mode';
@@ -116,28 +181,50 @@ export type ClassifiedSetFieldValue =
   | { readonly kind: 'generic'; readonly value: unknown };
 
 export const classifySetFieldValue = (path: string, value: unknown): ClassifiedSetFieldValue => {
-  const entry = getFieldRegistryEntry(path);
-  if (entry === undefined || !isWritablePath(entry)) return { kind: 'generic', value };
+  const domain = getSetFieldValueDomain(path);
+  if (domain !== undefined) {
+    if (path !== 'global_manifest_version') {
+      if (domain.type === 'enum') {
+        if (typeof value !== 'string' || !domain.values.includes(value)) {
+          throw rejectedValue(path);
+        }
+      } else if (domain.type === 'boolean') {
+        if (typeof value !== 'boolean') {
+          throw rejectedValue(path);
+        }
+      } else if (domain.type === 'string') {
+        if (typeof value !== 'string') {
+          throw rejectedValue(path);
+        }
+      } else if (domain.type === 'number') {
+        if (typeof value !== 'number') {
+          throw rejectedValue(path);
+        }
+      }
+    } else if (typeof value !== 'string') {
+      throw rejectedValue(path);
+    }
+  }
+
   const protection = protectionModeOf(path);
   if (protection)
     return {
       kind: 'protection_mode',
       protection,
-      value: enumValues(Object.values(ProtectionModes))(path, value),
+      value: value as ProtectionModes,
     };
   if (path === 'windows.antivirus_registration.mode') {
     return {
       kind: 'antivirus_registration_mode',
-      value: enumValues(Object.values(AntivirusRegistrationModes))(path, value),
+      value: value as AntivirusRegistrationModes,
     };
   }
   const deviceField = deviceControlFieldOf(path);
-  if (deviceField === 'enabled')
-    return { kind: 'device_control_enabled', value: assertBoolean(path, value) };
+  if (deviceField === 'enabled') return { kind: 'device_control_enabled', value: value as boolean };
   if (deviceField === 'usb_storage') {
     return {
       kind: 'device_control_usb_storage',
-      value: enumValues(Object.values(DeviceControlAccessLevel))(path, value),
+      value: value as DeviceControlAccessLevel,
     };
   }
   const popupProtection = popupProtectionOf(path);
@@ -145,23 +232,20 @@ export const classifySetFieldValue = (path: string, value: unknown): ClassifiedS
     return {
       kind: 'popup_enabled',
       protection: popupProtection,
-      value: assertBoolean(path, value),
+      value: value as boolean,
     };
   const malwareField = malwareBooleanFieldOf(path);
   if (malwareField)
-    return { kind: 'malware_boolean', field: malwareField, value: assertBoolean(path, value) };
+    return { kind: 'malware_boolean', field: malwareField, value: value as boolean };
   if (path.endsWith('.behavior_protection.reputation_service')) {
-    return { kind: 'behavior_reputation_service', value: assertBoolean(path, value) };
+    return { kind: 'behavior_reputation_service', value: value as boolean };
   }
   if (path === 'linux.events.session_data')
-    return { kind: 'linux_session_data', value: assertBoolean(path, value) };
-  if (path === 'linux.events.tty_io')
-    return { kind: 'linux_tty_io', value: assertBoolean(path, value) };
-  if (entry.defaultValue !== undefined && typeof value !== typeof entry.defaultValue) {
-    throw new PolicyChangePreparationError(
-      POLICY_CHANGE_PREPARATION_ERROR_CODE.invalid_input,
-      invalidSetFieldValueMessage(path)
-    );
+    return { kind: 'linux_session_data', value: value as boolean };
+  if (path === 'linux.events.tty_io') return { kind: 'linux_tty_io', value: value as boolean };
+  const entry = getFieldRegistryEntry(path);
+  if (entry?.defaultValue !== undefined && typeof value !== typeof entry.defaultValue) {
+    throw rejectedValue(path);
   }
   return { kind: 'generic', value };
 };

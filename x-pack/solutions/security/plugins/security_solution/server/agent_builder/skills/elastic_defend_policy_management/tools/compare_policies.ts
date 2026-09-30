@@ -10,6 +10,8 @@ import { z } from '@kbn/zod/v4';
 import type { StartServicesAccessor } from '@kbn/core/server';
 import type { EndpointAppContextService } from '../../../../endpoint/endpoint_app_context_services';
 import type { PolicyDiffEntry } from '../domain/diff_policy_config';
+import { describePathWritability } from '../domain/field_registry';
+import type { PathNotWritableReason } from '../domain/field_registry';
 import { policyReferenceInputSchema, toPolicyRef } from '../domain/input_schemas';
 import type { PolicyRef } from '../domain/input_schemas';
 import type {
@@ -59,7 +61,12 @@ type PresentedComparisonSide =
       normalizedHash: string;
     }>;
 
-type PresentedDiffEntry = Pick<PolicyDiffEntry, 'path'> & PresentedFromTo;
+type PresentedDiffEntry = Pick<PolicyDiffEntry, 'path'> &
+  PresentedFromTo &
+  (
+    | Readonly<{ writable: true }>
+    | Readonly<{ writable: false; not_writable_reason: PathNotWritableReason }>
+  );
 
 type PresentedComparison = Readonly<{
   from: PresentedComparisonSide;
@@ -91,13 +98,39 @@ const presentComparisonSide = (side: EndpointPolicyComparisonSide): PresentedCom
   };
 };
 
+const orderDiffsWritableFirst = (diffs: readonly PolicyDiffEntry[]): readonly PolicyDiffEntry[] => {
+  const writable: PolicyDiffEntry[] = [];
+  const notWritable: PolicyDiffEntry[] = [];
+
+  for (const entry of diffs) {
+    if (describePathWritability(entry.path).writable) {
+      writable.push(entry);
+    } else {
+      notWritable.push(entry);
+    }
+  }
+
+  return [...writable, ...notWritable];
+};
+
 const presentDiffEntry = (entry: PolicyDiffEntry, limits: TrimLimits): PresentedDiffEntry => {
   const presented = presentFromTo(entry, limits);
-  return {
+  const writability = describePathWritability(entry.path);
+  const presentedEntry = {
     path: entry.path,
     ...presented,
     from: presented.from === undefined ? null : presented.from,
     to: presented.to === undefined ? null : presented.to,
+  };
+
+  if (writability.writable) {
+    return { ...presentedEntry, writable: true };
+  }
+
+  return {
+    ...presentedEntry,
+    writable: false,
+    not_writable_reason: writability.reason,
   };
 };
 
@@ -108,7 +141,8 @@ const presentComparePolicies = (
 ): PresentedComparison => {
   const presentedFrom = presentComparisonSide(from);
   const presentedTo = presentComparisonSide(to);
-  const capped = fullDiff.slice(0, COMPARE_DIFF_DISPLAY_CAP);
+  const orderedDiff = orderDiffsWritableFirst(fullDiff);
+  const capped = orderedDiff.slice(0, COMPARE_DIFF_DISPLAY_CAP);
 
   const buildSkeleton = (): PresentedComparison => ({
     from: presentedFrom,
@@ -170,6 +204,7 @@ export const createComparePoliciesTool = ({
       'and is capped at 50 entries, with entries_truncated true and entries_total disclosing further sites. ' +
       'Returned live identities follow the same rule: policy.id is the stable later idOrName, and a name with name_string_truncated true is display-only. ' +
       'A null from or to value means that path is absent on that side. ' +
+      'Each diff entry carries writable and, when writable is false, not_writable_reason, and writable entries are listed first. ' +
       'Does not count endpoints or write policies.',
     schema: comparePoliciesSchema,
     maxResultTokens: COMPARE_POLICIES_MAX_RESULT_TOKENS,

@@ -219,6 +219,11 @@ describe('createComparePoliciesTool', () => {
       to: baseline,
       diffs: [
         {
+          path: 'windows.antivirus_registration.enabled',
+          from: true,
+          to: false,
+        },
+        {
           path: 'windows.malware.mode',
           from: ProtectionModes.prevent,
           to: ProtectionModes.detect,
@@ -259,21 +264,39 @@ describe('createComparePoliciesTool', () => {
       value_total: number;
       value_truncated: boolean;
     };
-    expect(dto.value_total).toBe(3);
+    expect(dto.value_total).toBe(4);
     expect(dto.value_truncated).toBe(false);
+    expect(dto.diffs.map((entry) => entry.path)).toEqual([
+      'windows.malware.mode',
+      'linux.events.dns',
+      'windows.antivirus_registration.enabled',
+      'windows.advanced.alerts.rollback',
+    ]);
     const missingFrom = dto.diffs.find((entry) => entry.path === 'linux.events.dns');
+    const derived = dto.diffs.find(
+      (entry) => entry.path === 'windows.antivirus_registration.enabled'
+    );
     const missingTo = dto.diffs.find((entry) => entry.path === 'windows.advanced.alerts.rollback');
-    expect(missingFrom).toEqual({ path: 'linux.events.dns', from: null, to: true });
+    expect(missingFrom).toEqual({
+      path: 'linux.events.dns',
+      from: null,
+      to: true,
+      writable: true,
+    });
+    expect(derived).toEqual({
+      path: 'windows.antivirus_registration.enabled',
+      from: true,
+      to: false,
+      writable: false,
+      not_writable_reason: 'derived_setting',
+    });
     expect(missingTo).toEqual({
       path: 'windows.advanced.alerts.rollback',
       from: { enabled: true },
       to: null,
+      writable: false,
+      not_writable_reason: 'unknown_path',
     });
-    for (const entry of dto.diffs) {
-      expect('from' in entry).toBe(true);
-      expect('to' in entry).toBe(true);
-      expect(JSON.parse(JSON.stringify(entry))).toEqual(entry);
-    }
   });
 
   it('returns normalized_posture_equal true when the full deterministic diff is empty', async () => {
