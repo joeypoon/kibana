@@ -10,6 +10,7 @@ import type { ToolHandlerContext } from '@kbn/agent-builder-server/tools';
 import type { StartServicesAccessor } from '@kbn/core/server';
 import { httpServerMock, loggingSystemMock } from '@kbn/core/server/mocks';
 import { elasticsearchClientMock } from '@kbn/core-elasticsearch-client-server-mocks';
+import { z } from '@kbn/zod/v4';
 import { getEndpointAuthzInitialStateMock } from '../../../../../common/endpoint/service/authz/mocks';
 import { createMockEndpointAppContextService } from '../../../../endpoint/mocks';
 import { createToolHandlerContext } from '../../../__mocks__/test_helpers';
@@ -19,7 +20,10 @@ import {
   createGetPolicyFieldReferenceTool,
   getPolicyFieldReferenceSchema,
 } from './get_policy_field_reference';
-import type { ExactFieldReferenceResult } from './get_policy_field_reference';
+import type {
+  ExactFieldReferenceResult,
+  SearchFieldReferenceResult,
+} from './get_policy_field_reference';
 
 jest.mock('./create_policy_tool', () => {
   const actual = jest.requireActual('./create_policy_tool');
@@ -71,7 +75,16 @@ const createTool = (canReadPolicyManagement = true) =>
 
 const getResult = async (path: string, canReadPolicyManagement = true) => {
   const tool = createTool(canReadPolicyManagement);
-  const result = await tool.handler({ path }, createContext());
+  const result = await tool.handler({ selector: { path } }, createContext());
+  if (!('results' in result)) {
+    throw new Error('expected a standard tool result');
+  }
+  return result.results[0];
+};
+
+const getQueryResult = async (query: string, canReadPolicyManagement = true) => {
+  const tool = createTool(canReadPolicyManagement);
+  const result = await tool.handler({ selector: { query } }, createContext());
   if (!('results' in result)) {
     throw new Error('expected a standard tool result');
   }
@@ -93,23 +106,41 @@ describe('createGetPolicyFieldReferenceTool', () => {
     );
   });
 
-  it('returns the exact registry entry for a typed event path', async () => {
+  it('returns the exact registry entry with writability facts and accepted values', async () => {
     const result = await getResult('linux.events.dns');
 
     expect(result.type).toBe(ToolResultType.other);
-    expect(result.data).toEqual({
-      found: true,
-      match: 'exact',
-      path: 'linux.events.dns',
-      documentationAvailability: 'absent',
-      longFormGuidance: 'not_retrieved_by_this_tool',
-      entry: expect.objectContaining({
+    expect(result.data).toEqual(
+      expect.objectContaining({
+        found: true,
+        match: 'exact',
         path: 'linux.events.dns',
-      }),
-    });
+        documentationAvailability: 'absent',
+        longFormGuidance: 'not_retrieved_by_this_tool',
+        entry: expect.objectContaining({
+          path: 'linux.events.dns',
+        }),
+      })
+    );
     const exact = result.data as ExactFieldReferenceResult;
     expect(exact).not.toHaveProperty('content');
     expect(JSON.stringify(exact)).not.toContain('"longFormGuidance":"unavailable"');
+
+    const usb = await getResult('windows.device_control.usb_storage');
+
+    expect(usb.type).toBe(ToolResultType.other);
+    expect(usb.data).toEqual({
+      found: true,
+      match: 'exact',
+      path: 'windows.device_control.usb_storage',
+      documentationAvailability: 'absent',
+      longFormGuidance: 'not_retrieved_by_this_tool',
+      writable: true,
+      acceptedValues: { type: 'enum', values: ['audit', 'read_only', 'no_execute', 'deny_all'] },
+      entry: expect.objectContaining({
+        path: 'windows.device_control.usb_storage',
+      }),
+    });
   });
 
   it('returns a successful unknown miss for an invented path', async () => {
@@ -139,6 +170,9 @@ describe('createGetPolicyFieldReferenceTool', () => {
     const { entries } = result.data as {
       entries: Array<{
         documentationAvailability: 'absent' | 'present';
+        writable: boolean;
+        not_writable_reason?: string;
+        acceptedValues?: { type: string };
         entry: { path: string; documentation?: string };
       }>;
     };
@@ -177,6 +211,9 @@ describe('createGetPolicyFieldReferenceTool', () => {
     const { entries } = result.data as {
       entries: Array<{
         documentationAvailability: 'absent' | 'present';
+        writable: boolean;
+        not_writable_reason?: string;
+        acceptedValues?: { type: string };
         entry: { path: string; documentation?: string };
       }>;
     };
@@ -184,26 +221,95 @@ describe('createGetPolicyFieldReferenceTool', () => {
       'windows.ransomware.mode',
       'mac.ransomware.mode',
     ]);
-    expect(entries[0]).toEqual({
-      documentationAvailability: 'absent',
-      entry: expect.objectContaining({ path: 'windows.ransomware.mode' }),
-    });
+    expect(entries[0]).toEqual(
+      expect.objectContaining({
+        documentationAvailability: 'absent',
+        entry: expect.objectContaining({ path: 'windows.ransomware.mode' }),
+      })
+    );
     expect(entries[0]?.entry).not.toHaveProperty('documentation');
-    expect(entries[1]).toEqual({
-      documentationAvailability: 'present',
-      entry: expect.objectContaining({
-        path: 'mac.ransomware.mode',
-        documentation: expect.stringContaining('Enable ransomware protection for macOS'),
-      }),
-    });
+    expect(entries[1]).toEqual(
+      expect.objectContaining({
+        documentationAvailability: 'present',
+        entry: expect.objectContaining({
+          path: 'mac.ransomware.mode',
+          documentation: expect.stringContaining('Enable ransomware protection for macOS'),
+        }),
+      })
+    );
   });
 
-  it('rejects extra keys instead of silently ignoring them', () => {
-    expect(
-      getPolicyFieldReferenceSchema.safeParse({ path: 'linux.events.dns', os: 'linux' }).success
-    ).toBe(false);
-    expect(getPolicyFieldReferenceSchema.safeParse({ path: 'linux.events.dns' }).success).toBe(
-      true
-    );
+  it('returns ranked device control search results with both settings and accepted values', async () => {
+    const result = await getQueryResult('device control');
+
+    expect(result.type).toBe(ToolResultType.other);
+    const data = result.data as SearchFieldReferenceResult;
+    expect(data.found).toBe(true);
+    expect(data.match).toBe('search');
+    expect(data.query).toBe('device control');
+    expect(data).not.toHaveProperty('osFilter');
+    expect(data.results_truncated).toBe(false);
+    expect(data.candidates_truncated).toBe(false);
+    expect(data.results_total).toBe(data.results.length);
+
+    const byPath = new Map(data.results.map((hit) => [hit.path, hit]));
+    expect(byPath.get('windows.device_control.enabled')).toEqual({
+      path: 'windows.device_control.enabled',
+      os: ['windows'],
+      writable: true,
+      acceptedValues: { type: 'boolean' },
+      matchedTerms: ['device', 'control'],
+      score: 2,
+    });
+    expect(byPath.get('windows.device_control.usb_storage')).toEqual({
+      path: 'windows.device_control.usb_storage',
+      os: ['windows'],
+      writable: true,
+      acceptedValues: {
+        type: 'enum',
+        values: ['audit', 'read_only', 'no_execute', 'deny_all'],
+      },
+      matchedTerms: ['device', 'control'],
+      score: 2,
+    });
+
+    const usbDomain = byPath.get('windows.device_control.usb_storage')?.acceptedValues;
+    if (usbDomain?.type !== 'enum') {
+      throw new Error('expected an enum domain for usb_storage');
+    }
+    expect(usbDomain.values).not.toContain('full_access');
+
+    const coupledPopup = byPath.get('windows.popup.device_control.enabled');
+    expect(coupledPopup).toEqual({
+      path: 'windows.popup.device_control.enabled',
+      os: ['windows'],
+      writable: false,
+      not_writable_reason: 'coupled_only',
+      matchedTerms: ['device', 'control'],
+      score: 2,
+    });
+    expect(coupledPopup).not.toHaveProperty('acceptedValues');
+  });
+
+  it('emits native Zod v4 JSON Schema with a required root selector and strict exclusive branches', () => {
+    const jsonSchema = z.toJSONSchema(getPolicyFieldReferenceSchema, { io: 'input' });
+
+    expect(jsonSchema.type).toBe('object');
+    expect(jsonSchema.required).toEqual(['selector']);
+
+    const selectorSchema = jsonSchema.properties?.selector;
+    expect(selectorSchema).toBeDefined();
+    if (typeof selectorSchema !== 'object') {
+      throw new Error('expected a selector object schema');
+    }
+    const branches = selectorSchema.anyOf ?? [];
+    expect(branches).toHaveLength(2);
+    for (const field of ['path', 'query'] as const) {
+      const branch = branches.find((b) => field in (b.properties ?? {}));
+      expect(branch).toBeDefined();
+      expect(branch?.type).toBe('object');
+      expect(branch?.required).toEqual([field]);
+      expect(branch?.additionalProperties).toBe(false);
+    }
   });
 });
