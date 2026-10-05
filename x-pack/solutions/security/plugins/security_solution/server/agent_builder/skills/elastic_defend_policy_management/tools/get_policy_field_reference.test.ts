@@ -7,7 +7,6 @@
 
 import { ToolResultType } from '@kbn/agent-builder-common';
 import type { ToolHandlerContext } from '@kbn/agent-builder-server/tools';
-import type { StartServicesAccessor } from '@kbn/core/server';
 import { httpServerMock, loggingSystemMock } from '@kbn/core/server/mocks';
 import { elasticsearchClientMock } from '@kbn/core-elasticsearch-client-server-mocks';
 import { z } from '@kbn/zod/v4';
@@ -37,14 +36,8 @@ const mockedCreatePolicyTool = jest.mocked(createPolicyTool);
 
 const SPACE_ID = 'space-marketing';
 
-const createGetStartServices = (): StartServicesAccessor =>
-  jest.fn(async () => [
-    { savedObjects: { getScopedClient: jest.fn().mockReturnValue({}) } },
-  ]) as unknown as StartServicesAccessor;
-
 const createService = (canReadPolicyManagement: boolean) => {
   const endpointAppContextService = createMockEndpointAppContextService();
-  const getStartServices = createGetStartServices();
   const scopedFleet = endpointAppContextService.getInternalFleetServices();
 
   endpointAppContextService.getInternalFleetServices.mockReset();
@@ -57,7 +50,7 @@ const createService = (canReadPolicyManagement: boolean) => {
     })
   );
 
-  return { endpointAppContextService, getStartServices };
+  return { endpointAppContextService };
 };
 
 const createContext = (): ToolHandlerContext => {
@@ -99,7 +92,6 @@ describe('createGetPolicyFieldReferenceTool', () => {
     expect(mockedCreatePolicyTool).toHaveBeenCalledWith(
       expect.objectContaining({
         endpointAppContextService: deps.endpointAppContextService,
-        getStartServices: deps.getStartServices,
         id: GET_POLICY_FIELD_REFERENCE_TOOL_ID,
         schema: getPolicyFieldReferenceSchema,
       })
